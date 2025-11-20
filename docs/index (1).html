@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyumba - Find Your Dream Home in Zambia</title>
+    <meta name="description" content="Find your dream home in Zambia. Browse thousands of properties for sale and rent in Lusaka and across Zambia.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0D9488',
+                        'primary-dark': '#0F766E',
+                        secondary: '#FACC15',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .property-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .property-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="font-sans bg-white">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="p-2 bg-primary rounded-lg text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                </div>
+                <span class="text-xl sm:text-2xl font-bold text-primary">Nyumba</span>
+            </div>
+            <div class="hidden md:flex space-x-4 lg:space-x-6">
+                <a href="#properties" class="text-gray-600 hover:text-primary transition">Buy</a>
+                <a href="#contact" class="text-gray-600 hover:text-primary transition">Sell</a>
+                <a href="#properties" class="text-gray-600 hover:text-primary transition">Rent</a>
+                <a href="#contact" class="bg-primary text-white px-4 lg:px-6 py-2 rounded-full hover:bg-primary-dark transition">Sign Up</a>
+            </div>
+            <button id="mobile-menu-btn" class="md:hidden text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 border-t">
+            <a href="#properties" class="block py-3 text-gray-600 hover:text-primary">Buy</a>
+            <a href="#contact" class="block py-3 text-gray-600 hover:text-primary">Sell</a>
+            <a href="#properties" class="block py-3 text-gray-600 hover:text-primary">Rent</a>
+            <a href="#contact" class="block w-full text-center mt-2 bg-primary text-white px-6 py-2 rounded-full hover:bg-primary-dark">Sign Up</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center text-white">
+        <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2574&auto=format&fit=crop" alt="Modern Zambian house" class="absolute inset-0 w-full h-full object-cover" style="z-index: -2;">
+        <div class="absolute inset-0 bg-black bg-opacity-50" style="z-index: -1;"></div>
+        
+        <div class="max-w-4xl mx-auto px-6 text-center py-20">
+            <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 drop-shadow-lg">Where Nyumbaling Happens</h1>
+            <p class="text-lg sm:text-xl md:text-2xl mb-8 drop-shadow-lg">Find your dream home in Zambia's premier property marketplace</p>
+            
+            <div class="max-w-2xl mx-auto bg-white rounded-full p-2 flex items-center shadow-2xl">
+                <input type="text" placeholder="Enter location or property type" class="w-full text-base sm:text-lg text-gray-800 bg-transparent border-none focus:ring-0 pl-4 sm:pl-6 focus:outline-none" aria-label="Search properties">
+                <button class="bg-primary hover:bg-primary-dark text-white rounded-full p-3 ml-2 transition" aria-label="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.3-4.3"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-12 sm:py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
+                <div>
+                    <div class="text-3xl sm:text-4xl font-bold text-primary">5,000+</div>
+                    <div class="text-gray-600 mt-2 text-sm sm:text-base">Active Listings</div>
+                </div>
+                <div>
+                    <div class="text-3xl sm:text-4xl font-bold text-primary">200+</div>
+                    <div class="text-gray-600 mt-2 text-sm sm:text-base">Verified Agents</div>
+                </div>
+                <div>
+                    <div class="text-3xl sm:text-4xl font-bold text-primary">1,200+</div>
+                    <div class="text-gray-600 mt-2 text-sm sm:text-base">Homes Sold</div>
+                </div>
+                <div>
+                    <div class="text-3xl sm:text-4xl font-bold text-primary">98%</div>
+                    <div class="text-gray-600 mt-2 text-sm sm:text-base">Satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Properties Section -->
+    <section id="properties" class="py-16 sm:py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Featured Properties in Lusaka</h2>
+                <p class="text-gray-600 text-lg">Discover your perfect home today</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8" id="properties-grid">
+                <!-- Properties will be loaded here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Nyumba Section -->
+    <section class="py-16 sm:py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Why Choose Nyumba?</h2>
+                <p class="text-gray-600 text-lg">A revolutionary platform for the Zambian property market</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-md text-center hover:shadow-xl transition">
+                    <div class="bg-primary text-white rounded-full p-4 inline-block mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.3-4.3"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Centralized Listings</h3>
+                    <p class="text-gray-600">Find all of Zambia's top property listings in one place. No more endless scrolling on social media.</p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-md text-center hover:shadow-xl transition">
+                    <div class="bg-primary text-white rounded-full p-4 inline-block mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="2" x2="12" y2="22"/>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">AI-Powered Insights</h3>
+                    <p class="text-gray-600">Make informed decisions with AI-driven pricing, market trends, and transparent neighborhood data.</p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-md text-center hover:shadow-xl transition">
+                    <div class="bg-primary text-white rounded-full p-4 inline-block mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+                            <path d="m9 12 2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Secure Transactions</h3>
+                    <p class="text-gray-600">Communicate, schedule tours, and handle financing securely within the platform.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 sm:py-20 bg-primary text-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-6">Ready to Find Your Dream Home?</h2>
+            <p class="text-lg sm:text-xl mb-8">Join thousands of Zambians finding their perfect property</p>
+            <a href="#contact" class="inline-block bg-secondary hover:bg-yellow-500 text-gray-900 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-lg font-semibold transition shadow-lg">Get Started Today</a>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-16 sm:py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Get in Touch</h2>
+                <p class="text-gray-600 text-lg">Have questions? We're here to help</p>
+            </div>
+            
+            <form id="contact-form" class="bg-gray-50 p-6 sm:p-8 rounded-2xl shadow-lg">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input type="text" id="name" name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <input type="email" id="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                    <textarea id="message" name="message" rows="5" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-primary text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-primary-dark transition shadow-md">Send Message</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <div class="p-2 bg-white rounded-lg text-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                    </div>
+                    <span class="text-2xl font-bold">Nyumba</span>
+                </div>
+                <p class="text-gray-400 mb-6">Simplifying real estate in Zambia</p>
+                <p class="text-sm text-gray-500">&copy; 2024 Nyumba. All rights reserved.</p>
+                <p class="text-sm text-gray-500 mt-2">Contact: <a href="mailto:contact@nyumba.co.zm" class="text-secondary hover:underline">contact@nyumba.co.zm</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Property data
+        const properties = [
+            {
+                image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800&auto=format&fit=crop",
+                price: "K 3,800,000",
+                beds: 4,
+                baths: 3,
+                sqm: 280,
+                address: "Kabulonga, Lusaka",
+                badge: "Open House"
+            },
+            {
+                image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop",
+                price: "K 2,150,000",
+                beds: 3,
+                baths: 2,
+                sqm: 190,
+                address: "Rhodes Park, Lusaka",
+                badge: "New Listing"
+            },
+            {
+                image: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?q=80&w=800&auto=format&fit=crop",
+                price: "K 1,900,000",
+                beds: 3,
+                baths: 2,
+                sqm: 175,
+                address: "Ibex Hill, Lusaka",
+                badge: ""
+            },
+            {
+                image: "https://images.unsplash.com/photo-1494203484021-3c454daf695d?q=80&w=800&auto=format&fit=crop",
+                price: "K 1,500,000",
+                beds: 2,
+                baths: 2,
+                sqm: 120,
+                address: "Makeni, Lusaka",
+                badge: ""
+            },
+            {
+                image: "https://images.unsplash.com/photo-1558036117-15d82a90b9b1?q=80&w=800&auto=format&fit=crop",
+                price: "K 4,200,000",
+                beds: 5,
+                baths: 4,
+                sqm: 350,
+                address: "Longacres, Lusaka",
+                badge: "Luxury"
+            },
+            {
+                image: "https://images.unsplash.com/photo-1605146769289-440113cc3d00?q=80&w=800&auto=format&fit=crop",
+                price: "K 2,950,000",
+                beds: 4,
+                baths: 3,
+                sqm: 240,
+                address: "Olympia, Lusaka",
+                badge: ""
+            }
+        ];
+
+        // Render properties
+        function renderProperties() {
+            const container = document.getElementById('properties-grid');
+            if (!container) return;
+            
+            properties.forEach(prop => {
+                const badgeHTML = prop.badge ? `<div class="absolute top-2 left-2 bg-secondary text-gray-900 text-xs font-bold px-3 py-1 rounded-full">${prop.badge}</div>` : '';
+                
+                const card = document.createElement('div');
+                card.className = 'property-card bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer';
+                card.innerHTML = `
+                    <div class="relative">
+                        <img src="${prop.image}" alt="${prop.address}" class="w-full h-56 object-cover">
+                        ${badgeHTML}
+                    </div>
+                    <div class="p-6">
+                        <p class="text-2xl font-bold text-gray-900 mb-2">${prop.price}</p>
+                        <div class="flex space-x-4 text-gray-600 mb-3 text-sm">
+                            <span><strong>${prop.beds}</strong> beds</span>
+                            <span><strong>${prop.baths}</strong> baths</span>
+                            <span><strong>${prop.sqm}</strong> sqm</span>
+                        </div>
+                        <p class="text-gray-700">${prop.address}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+
+        // Contact form
+        const contactForm = document.getElementById('contact-form');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('Thank you for your message! We will get back to you soon.');
+                contactForm.reset();
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderProperties();
+        });
+    </script>
+</body>
+</html>
