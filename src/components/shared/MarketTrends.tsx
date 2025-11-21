@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface DataPoint {
   month: string;
@@ -12,7 +12,6 @@ export function MarketTrends() {
   const [selectedArea, setSelectedArea] = useState("lusaka-central");
   const [animatedData, setAnimatedData] = useState<DataPoint[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
   const marketData: Record<string, DataPoint[]> = {
     "lusaka-central": [
@@ -67,7 +66,6 @@ export function MarketTrends() {
     setSelectedArea(area);
     setIsAnimating(true);
     setAnimatedData([]);
-    setCurrentIndex(0);
 
     const data = marketData[area];
     let index = 0;
@@ -75,7 +73,6 @@ export function MarketTrends() {
     const interval = setInterval(() => {
       if (index < data.length) {
         setAnimatedData((prev) => [...prev, data[index]]);
-        setCurrentIndex(index);
         index++;
       } else {
         clearInterval(interval);
@@ -86,13 +83,15 @@ export function MarketTrends() {
 
   const getPriceChange = () => {
     if (animatedData.length < 2) return 0;
-    const first = animatedData[0].price;
-    const last = animatedData[animatedData.length - 1].price;
-    return ((last - first) / first) * 100;
+    const first = animatedData[0];
+    const last = animatedData[animatedData.length - 1];
+    if (!first || !last || !first.price || !last.price) return 0;
+    return ((last.price - first.price) / first.price) * 100;
   };
 
   const getTotalSales = () => {
-    return animatedData.reduce((sum, d) => sum + d.sales, 0);
+    if (animatedData.length === 0) return 0;
+    return animatedData.reduce((sum, d) => sum + (d?.sales || 0), 0);
   };
 
   const dataToDisplay =
@@ -171,7 +170,7 @@ export function MarketTrends() {
               K
               {dataToDisplay.length > 0
                 ? (
-                    dataToDisplay.reduce((sum, d) => sum + d.price, 0) /
+                    dataToDisplay.reduce((sum, d) => sum + (d?.price || 0), 0) /
                     dataToDisplay.length /
                     1000
                   ).toFixed(0)
@@ -204,12 +203,14 @@ export function MarketTrends() {
         {/* Bar Chart */}
         <div className="flex items-end justify-between gap-2 h-64">
           {dataToDisplay.map((data, index) => {
+            if (!data) return null;
+
             const priceHeight = (data.price / maxPrice) * 100;
             const salesHeight = (data.sales / maxSales) * 100;
 
             return (
               <div
-                key={data.month}
+                key={data.month || index}
                 className="flex-1 flex flex-col items-center gap-2"
               >
                 {/* Price Bar */}
@@ -223,7 +224,7 @@ export function MarketTrends() {
                     }}
                   >
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
-                      K{(data.price / 1000).toFixed(0)}k
+                      K{((data.price || 0) / 1000).toFixed(0)}k
                     </div>
                   </div>
                   {/* Sales Bar */}
@@ -236,12 +237,12 @@ export function MarketTrends() {
                     }}
                   >
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
-                      {data.sales} sales
+                      {data.sales || 0} sales
                     </div>
                   </div>
                 </div>
                 <div className="text-xs text-gray-600 font-medium">
-                  {data.month}
+                  {data.month || ""}
                 </div>
               </div>
             );

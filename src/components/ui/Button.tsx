@@ -34,15 +34,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary:
-        "bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2",
+        "bg-primary-900 !text-black font-bold hover:bg-primary-800 focus:ring-primary-500 focus:ring-offset-2 shadow-md",
       secondary:
-        "bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500 focus:ring-offset-2",
+        "bg-secondary-700 !text-black font-bold hover:bg-secondary-800 focus:ring-secondary-500 focus:ring-offset-2 shadow-md",
       outline:
-        "border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500 focus:ring-offset-2",
+        "border-2 border-primary-700 bg-white !text-primary-900 font-bold hover:bg-primary-50 hover:border-primary-800 focus:ring-primary-500 focus:ring-offset-2",
       ghost:
         "text-gray-700 hover:bg-gray-100 focus:ring-gray-400 focus:ring-offset-2",
       danger:
-        "bg-danger-600 text-white hover:bg-danger-700 focus:ring-danger-500 focus:ring-offset-2",
+        "bg-danger-700 !text-black font-bold hover:bg-danger-800 focus:ring-danger-500 focus:ring-offset-2 shadow-md",
     };
 
     const sizes = {

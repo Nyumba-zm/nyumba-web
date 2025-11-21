@@ -78,15 +78,21 @@ export function AdvancedSearch({ onSearch, className }: AdvancedSearchProps) {
   return (
     <div
       className={cn(
-        "bg-white rounded-lg border border-gray-200 shadow-lg",
+        "bg-white rounded-xl border-2 border-gray-200 shadow-lg overflow-hidden",
         className
       )}
     >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4">
+        <h3 className="text-lg font-bold text-white">Advanced Search</h3>
+        <p className="text-primary-100 text-sm">Find your perfect property</p>
+      </div>
+
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
         {/* Location Search */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Location
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            📍 Location
           </label>
           <Input
             type="text"
@@ -100,27 +106,22 @@ export function AdvancedSearch({ onSearch, className }: AdvancedSearchProps) {
         </div>
 
         {/* Price Range */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Min Price (ZMW)
-            </label>
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-3">
+            💰 Price Range (ZMW)
+          </label>
+          <div className="grid grid-cols-2 gap-3">
             <Input
               type="number"
-              placeholder="0"
+              placeholder="Min"
               value={filters.minPrice || ""}
               onChange={(e) =>
                 setFilters({ ...filters, minPrice: Number(e.target.value) })
               }
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Max Price (ZMW)
-            </label>
             <Input
               type="number"
-              placeholder="10,000,000"
+              placeholder="Max"
               value={filters.maxPrice || ""}
               onChange={(e) =>
                 setFilters({ ...filters, maxPrice: Number(e.target.value) })
@@ -131,20 +132,20 @@ export function AdvancedSearch({ onSearch, className }: AdvancedSearchProps) {
 
         {/* Bedrooms */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Bedrooms
+          <label className="block text-sm font-semibold text-gray-900 mb-3">
+            🛏️ Bedrooms
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {[1, 2, 3, 4, 5].map((count) => (
               <button
                 key={count}
                 type="button"
                 onClick={() => handleBedroomToggle(count)}
                 className={cn(
-                  "px-4 py-2 rounded-lg border transition-colors",
+                  "flex-1 min-w-[60px] px-4 py-2.5 rounded-lg border-2 font-semibold transition-all",
                   filters.bedrooms.includes(count)
-                    ? "bg-blue-500 text-white border-blue-500"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-blue-300"
+                    ? "bg-primary-700 text-white border-primary-700 shadow-md"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-primary-400 hover:bg-primary-50"
                 )}
               >
                 {count}+
@@ -157,17 +158,22 @@ export function AdvancedSearch({ onSearch, className }: AdvancedSearchProps) {
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-blue-600 text-sm font-medium hover:text-blue-700"
+          className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
         >
-          {isExpanded ? "− Hide" : "+ Show"} Advanced Filters
+          <span className="text-sm font-semibold text-gray-900">
+            {isExpanded ? "Hide" : "Show"} Advanced Filters
+          </span>
+          <span className="text-primary-600 text-xl">
+            {isExpanded ? "−" : "+"}
+          </span>
         </button>
 
         {isExpanded && (
-          <>
+          <div className="space-y-6 pt-2 border-t border-gray-200">
             {/* Property Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Property Type
+              <label className="block text-sm font-semibold text-gray-900 mb-3">
+                🏠 Property Type
               </label>
               <div className="flex flex-wrap gap-2">
                 {propertyTypes.map((type) => (
@@ -176,10 +182,10 @@ export function AdvancedSearch({ onSearch, className }: AdvancedSearchProps) {
                     type="button"
                     onClick={() => handleTypeToggle(type)}
                     className={cn(
-                      "px-4 py-2 rounded-lg border transition-colors text-sm",
+                      "px-4 py-2 rounded-lg border-2 font-medium transition-all text-sm text-black",
                       filters.propertyType.includes(type)
-                        ? "bg-blue-500 text-white border-blue-500"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-blue-300"
+                        ? "text-black border-primary-700 shadow-md"
+                        : "bg-black hover:border-primary-400 hover:bg-primary-50"
                     )}
                   >
                     {type}
@@ -190,8 +196,8 @@ export function AdvancedSearch({ onSearch, className }: AdvancedSearchProps) {
 
             {/* Amenities */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Amenities
+              <label className="block text-sm font-semibold text-gray-900 mb-3">
+                ✨ Amenities
               </label>
               <div className="flex flex-wrap gap-2">
                 {amenitiesList.map((amenity) => (
@@ -200,10 +206,10 @@ export function AdvancedSearch({ onSearch, className }: AdvancedSearchProps) {
                     type="button"
                     onClick={() => handleAmenityToggle(amenity)}
                     className={cn(
-                      "px-4 py-2 rounded-lg border transition-colors text-sm",
+                      "px-4 py-2 rounded-lg border-2 font-medium transition-all text-sm",
                       filters.amenities.includes(amenity)
-                        ? "bg-blue-500 text-white border-blue-500"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-blue-300"
+                        ? "bg-primary-700 text-white border-primary-700 shadow-md"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-primary-400 hover:bg-primary-50"
                     )}
                   >
                     {amenity}
@@ -213,7 +219,7 @@ export function AdvancedSearch({ onSearch, className }: AdvancedSearchProps) {
             </div>
 
             {/* Verified Only */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border-2 border-green-200">
               <input
                 type="checkbox"
                 id="verifiedOnly"
@@ -221,18 +227,25 @@ export function AdvancedSearch({ onSearch, className }: AdvancedSearchProps) {
                 onChange={(e) =>
                   setFilters({ ...filters, verifiedOnly: e.target.checked })
                 }
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
               />
-              <label htmlFor="verifiedOnly" className="text-sm text-gray-700">
-                Show only verified listings
+              <label
+                htmlFor="verifiedOnly"
+                className="text-sm font-medium text-gray-900 cursor-pointer"
+              >
+                ✓ Show only verified listings
               </label>
             </div>
-          </>
+          </div>
         )}
 
         {/* Search Button */}
-        <Button type="submit" className="w-full">
-          Search Properties
+        <Button
+          type="submit"
+          variant="primary"
+          className="w-full !bg-primary-700 hover:!bg-primary-800 !text-white text-lg py-3"
+        >
+          🔍 Search Properties
         </Button>
       </form>
     </div>
