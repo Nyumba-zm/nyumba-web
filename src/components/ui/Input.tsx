@@ -1,7 +1,7 @@
 // src/components/ui/Input.tsx
 
-import React from 'react';
-import { cn } from '@/lib/utils/cn';
+import React from "react";
+import { cn } from "@/lib/utils/cn";
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -16,7 +16,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
     {
       className,
-      type = 'text',
+      type = "text",
       label,
       error,
       helperText,
@@ -53,14 +53,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             disabled={disabled}
             className={cn(
-              'block w-full rounded-lg border border-gray-300 px-4 py-2.5',
-              'text-gray-900 placeholder:text-gray-400',
-              'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
-              'disabled:bg-gray-100 disabled:cursor-not-allowed',
-              'transition-colors',
-              leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
-              error && 'border-red-500 focus:ring-red-500',
+              "block w-full rounded-lg border-2 border-gray-300 px-4 py-2.5",
+              "text-gray-900 placeholder:text-gray-500",
+              "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-600",
+              "disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500",
+              "transition-colors",
+              leftIcon && "pl-10",
+              rightIcon && "pr-10",
+              error &&
+                "border-danger-500 focus:ring-danger-500 focus:border-danger-600",
               className
             )}
             {...props}
@@ -73,9 +74,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {error && (
-          <p className="mt-1 text-sm text-red-600">{error}</p>
-        )}
+        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
 
         {helperText && !error && (
           <p className="mt-1 text-sm text-gray-500">{helperText}</p>
@@ -85,6 +84,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";
 
 export { Input };

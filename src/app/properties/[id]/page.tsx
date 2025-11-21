@@ -5,6 +5,17 @@ import { mockProperties } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils/format";
 import { Button } from "@/components/ui/Button";
 import { ContactModal } from "@/components/property/ContactModal";
+import { VerificationBadge } from "@/components/features/verification";
+import {
+  PropertyValuation,
+  ComparableProperties,
+} from "@/components/features/valuation";
+import { NeighborhoodInsights } from "@/components/features/neighborhood";
+import { LoanCalculator } from "@/components/features/finance";
+import {
+  mockNeighborhoodData,
+  mockComparableProperties,
+} from "@/lib/mockFeatureData";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -35,6 +46,20 @@ export default function PropertyDetailPage() {
   const primaryImage =
     property.images.find((img) => img.isPrimary) || property.images[0];
 
+  // Mock verification status (would come from backend in production)
+  const isVerified = property.isFeatured; // Using featured as proxy for verified
+
+  // Mock valuation data
+  const estimatedValue = property.price * 1.05; // Slight variance
+  const pricePerSqm = Math.round(property.price / property.squareMeters);
+
+  // Get neighborhood data
+  const neighborhoodKey = property.neighborhood
+    .toLowerCase()
+    .replace(/\s+/g, "") as keyof typeof mockNeighborhoodData;
+  const neighborhoodData =
+    mockNeighborhoodData[neighborhoodKey] || mockNeighborhoodData.kabulonga;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Image Gallery */}
@@ -59,25 +84,31 @@ export default function PropertyDetailPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                {property.title}
-              </h1>
-              <p className="text-gray-600 mb-4 flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-2"
-                >
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                {property.address}, {property.neighborhood}, {property.city}
-              </p>
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                    {property.title}
+                  </h1>
+                  <p className="text-gray-600 mb-4 flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mr-2"
+                    >
+                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    {property.address}, {property.neighborhood}, {property.city}
+                  </p>
+                </div>
+                <VerificationBadge isVerified={isVerified} type="listing" />
+              </div>
+
               <div className="text-4xl font-bold text-primary-500 mb-6">
                 {formatCurrency(property.price)}
               </div>
@@ -176,6 +207,27 @@ export default function PropertyDetailPage() {
                 </div>
               )}
             </div>
+
+            {/* AI Valuation Section */}
+            <PropertyValuation
+              estimatedValue={estimatedValue}
+              confidenceLevel="high"
+              pricePerSqm={pricePerSqm}
+              comparableCount={mockComparableProperties.length}
+              className="mb-6"
+            />
+
+            {/* Comparable Properties */}
+            <ComparableProperties
+              comparables={mockComparableProperties}
+              className="mb-6"
+            />
+
+            {/* Neighborhood Insights */}
+            <NeighborhoodInsights data={neighborhoodData} className="mb-6" />
+
+            {/* Loan Calculator */}
+            <LoanCalculator propertyPrice={property.price} className="mb-6" />
           </div>
 
           {/* Sidebar */}

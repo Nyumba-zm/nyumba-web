@@ -1,6 +1,7 @@
 import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import "./globals.css";
 import type { Metadata } from "next";
 
@@ -21,11 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers>
-          <Header />
-          {children}
-          <Footer />
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            <Header />
+            {children}
+            <Footer />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

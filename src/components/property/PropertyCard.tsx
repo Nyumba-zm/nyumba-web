@@ -3,6 +3,9 @@
 import { useState, useMemo } from "react";
 import { Property } from "@/types/property";
 import { formatCurrency } from "@/lib/utils/format";
+import { useToast } from "@/components/ui/Toast";
+import { Badge } from "@/components/ui/Badge";
+import { VerificationBadge } from "@/components/features/verification";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -11,19 +14,18 @@ interface PropertyCardProps {
 }
 
 export function PropertyCard({ property }: PropertyCardProps) {
+  const { addToast } = useToast();
   const primaryImage =
     property.images.find((img) => img.isPrimary) || property.images[0];
 
-  // Check if property is saved
-  const getSavedStatus = () => {
+  // Initialize with lazy initializer to check localStorage on mount
+  const [isSaved, setIsSaved] = useState(() => {
     if (typeof window === "undefined") return false;
     const savedProperties = JSON.parse(
       localStorage.getItem("savedProperties") || "[]"
     );
     return savedProperties.includes(property.id);
-  };
-
-  const [isSaved, setIsSaved] = useState(getSavedStatus);
+  });
 
   const handleSaveClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -39,10 +41,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
       );
       localStorage.setItem("savedProperties", JSON.stringify(updated));
       setIsSaved(false);
+      addToast("Property removed from saved", "info");
     } else {
       savedProperties.push(property.id);
       localStorage.setItem("savedProperties", JSON.stringify(savedProperties));
       setIsSaved(true);
+      addToast("Property saved successfully", "success");
     }
   };
 
@@ -71,21 +75,28 @@ export function PropertyCard({ property }: PropertyCardProps) {
           {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-2">
             {property.isFeatured && (
-              <div className="bg-secondary-500 text-gray-900 text-xs font-bold px-3 py-1 rounded-full">
+              <Badge variant="warning" size="md">
                 Featured
-              </div>
+              </Badge>
             )}
             {isNew && (
-              <div className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+              <Badge variant="success" size="md">
                 New
-              </div>
+              </Badge>
             )}
             {property.status === "sold" && (
-              <div className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+              <Badge variant="danger" size="md">
                 Sold
-              </div>
+              </Badge>
             )}
           </div>
+
+          {/* Verification Badge */}
+          {property.isFeatured && (
+            <div className="absolute bottom-2 left-2">
+              <VerificationBadge isVerified={true} type="listing" />
+            </div>
+          )}
 
           {/* Save Heart Icon */}
           <button

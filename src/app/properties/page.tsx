@@ -4,8 +4,11 @@ import { useState, useMemo } from "react";
 import { PropertyGrid } from "@/components/property/PropertyGrid";
 import { PropertyFilters } from "@/components/property/PropertyFilters";
 import { PropertySort } from "@/components/property/PropertySort";
+import { AdvancedSearch, SavedSearches } from "@/components/features/search";
+import { mockSavedSearches } from "@/lib/mockFeatureData";
 import { mockProperties } from "@/lib/mockData";
 import { PropertyType, ListingType } from "@/types/property";
+import { Button } from "@/components/ui/Button";
 
 export default function PropertiesPage() {
   // For now, use mock data. Later, use the API:
@@ -22,6 +25,7 @@ export default function PropertiesPage() {
   });
 
   const [sortBy, setSortBy] = useState("newest");
+  const [viewMode, setViewMode] = useState<"standard" | "advanced">("standard");
   const isLoading = false;
 
   // Filter properties
@@ -106,9 +110,25 @@ export default function PropertiesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 py-12 mb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-            Browse Properties
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+              Browse Properties
+            </h1>
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === "standard" ? "primary" : "outline"}
+                onClick={() => setViewMode("standard")}
+              >
+                Standard Search
+              </Button>
+              <Button
+                variant={viewMode === "advanced" ? "primary" : "outline"}
+                onClick={() => setViewMode("advanced")}
+              >
+                Advanced Search
+              </Button>
+            </div>
+          </div>
           <p className="text-lg text-gray-600">
             Find your perfect home from thousands of listings across Zambia
           </p>
@@ -116,25 +136,59 @@ export default function PropertiesPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <PropertyFilters filters={filters} onFilterChange={setFilters} />
-          </div>
+        {viewMode === "standard" ? (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Filters Sidebar */}
+            <div className="lg:col-span-1">
+              <PropertyFilters filters={filters} onFilterChange={setFilters} />
+            </div>
 
-          {/* Properties List */}
-          <div className="lg:col-span-3">
-            <PropertySort
-              onSortChange={setSortBy}
-              totalResults={filteredProperties.length}
-            />
+            {/* Properties List */}
+            <div className="lg:col-span-3">
+              <PropertySort
+                onSortChange={setSortBy}
+                totalResults={filteredProperties.length}
+              />
 
-            <PropertyGrid
-              properties={filteredProperties}
-              isLoading={isLoading}
-            />
+              <PropertyGrid
+                properties={filteredProperties}
+                isLoading={isLoading}
+              />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Advanced Search & Saved Searches */}
+            <div className="lg:col-span-1 space-y-6">
+              <AdvancedSearch
+                onSearch={(searchFilters) => {
+                  console.log("Advanced search:", searchFilters);
+                  // TODO: Apply advanced filters
+                }}
+              />
+
+              <SavedSearches
+                searches={mockSavedSearches}
+                onLoad={(id) => console.log("Load search:", id)}
+                onDelete={(id) => console.log("Delete search:", id)}
+                onToggleAlerts={(id) => console.log("Toggle alerts:", id)}
+              />
+            </div>
+
+            {/* Properties List */}
+            <div className="lg:col-span-2">
+              <PropertySort
+                onSortChange={setSortBy}
+                totalResults={filteredProperties.length}
+              />
+
+              <PropertyGrid
+                properties={filteredProperties}
+                isLoading={isLoading}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

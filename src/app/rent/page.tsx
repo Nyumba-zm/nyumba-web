@@ -12,12 +12,15 @@ export default function RentPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-primary-500 text-white py-16">
+      <div className="py-16" style={{ backgroundColor: "#0f766e" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1
+            className="text-4xl md:text-5xl font-bold mb-4"
+            style={{ color: "#ffffff" }}
+          >
             Properties for Rent
           </h1>
-          <p className="text-lg md:text-xl text-gray-100">
+          <p className="text-lg md:text-xl" style={{ color: "#ffffff" }}>
             Find your perfect rental home in Lusaka and across Zambia
           </p>
         </div>
