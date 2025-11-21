@@ -72,10 +72,11 @@ export function Header() {
             Finance
           </Link>
           <Link
-            href="/contact"
-            className="text-gray-700 hover:text-primary-600 transition font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded px-2 py-1"
+            href="/demo"
+            className="text-gray-700 hover:text-primary-600 transition font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded px-2 py-1 flex items-center gap-1"
           >
-            Contact
+            <span className="text-lg">🎯</span>
+            Demo
           </Link>
           <Link
             href="/signup"
@@ -150,11 +151,13 @@ export function Header() {
             Finance
           </Link>
           <Link
-            href="/contact"
-            className="block py-3 text-gray-700 hover:text-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded font-medium"
+            href="/demo"
+            className="block py-3 text-gray-700 hover:text-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded font-medium flex items-center gap-2"
           >
-            Contact
+            <span className="text-lg">🎯</span>
+            Interactive Demos
           </Link>
+
           <Link
             href="/signup"
             className="block w-full text-center mt-2 px-6 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"

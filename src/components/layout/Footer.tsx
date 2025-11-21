@@ -115,6 +115,23 @@ export function Footer() {
                   Financing
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/neighborhood"
+                  className="text-gray-400 hover:text-primary-400 transition-colors text-sm"
+                >
+                  Neighborhoods
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/trust"
+                  className="text-gray-400 hover:text-primary-400 transition-colors text-sm flex items-center gap-1"
+                >
+                  
+                  Trust & Verification
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -1,6 +1,119 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 export default function AboutPage() {
+  const [activeDiff, setActiveDiff] = useState<number | null>(null);
+
+  const differentiators = [
+    {
+      number: 1,
+      icon: "🛡️",
+      title: "Trust Problem Solved",
+      subtitle: "Verified Real Estate Layer",
+      description:
+        "We solve the trust problem at the core of Zambia's real estate by authenticating agents, documents, and listings—eliminating scams and fraud.",
+      features: [
+        "Government ID verification",
+        "Document authentication",
+        "AI fraud detection",
+        "Background checks",
+      ],
+      color: "from-blue-400 to-blue-600",
+    },
+    {
+      number: 2,
+      icon: "🔄",
+      title: "End-to-End Platform",
+      subtitle: "Not Just Listings",
+      description:
+        "Nyumba manages the full journey: search → evaluate → verify → finance → inspect → insure → close.",
+      features: [
+        "Property search & discovery",
+        "AI valuation & pricing",
+        "Financing & mortgages",
+        "Inspection & closing",
+      ],
+      color: "from-green-400 to-green-600",
+    },
+    {
+      number: 3,
+      icon: "🤖",
+      title: "AI-Powered Pricing",
+      subtitle: "First in Zambia",
+      description:
+        "Fair market pricing using AI valuation, comparable analysis, and neighborhood insights—bringing transparency to Zambian real estate.",
+      features: [
+        "Comparable properties analysis",
+        "Demand heatmaps",
+        "Condition scoring",
+        "Price anomaly detection",
+      ],
+      color: "from-purple-400 to-purple-600",
+    },
+    {
+      number: 4,
+      icon: "🏦",
+      title: "Built-in Financing",
+      subtitle: "Multi-Bank Gateway",
+      description:
+        "One form → all banks → matched offers → digital submission. Nyumba is the first multi-bank mortgage gateway in Zambia.",
+      features: [
+        "One-form pre-qualification",
+        "Compare all lenders",
+        "Digital application",
+        "Real-time approval tracking",
+      ],
+      color: "from-yellow-400 to-yellow-600",
+    },
+    {
+      number: 5,
+      icon: "🌍",
+      title: "Built for Africa",
+      subtitle: "Not Copied from Abroad",
+      description:
+        "Designed for informal markets, fragmented records, scam-heavy channels, and mobile-first behavior—Africa's actual reality.",
+      features: [
+        "Hybrid formal/informal data",
+        "Mobile-optimized experience",
+        "Local payment integration",
+        "Zambian market expertise",
+      ],
+      color: "from-orange-400 to-orange-600",
+    },
+    {
+      number: 6,
+      icon: "🤝",
+      title: "Unified Ecosystem",
+      subtitle: "B2C + B2B Combined",
+      description:
+        "Buyers, sellers, agents, banks, inspectors, insurers, and contractors all operate in one connected system.",
+      features: [
+        "Multi-sided marketplace",
+        "Seamless collaboration",
+        "Unified communication",
+        "Integrated workflows",
+      ],
+      color: "from-red-400 to-red-600",
+    },
+    {
+      number: 7,
+      icon: "⚡",
+      title: "Friction Eliminated",
+      subtitle: "Fully Digital Process",
+      description:
+        "From viewing to documentation to payments, Nyumba replaces WhatsApp chaos and offline clutter with a complete digital experience.",
+      features: [
+        "Digital documentation",
+        "Online payments",
+        "Virtual tours",
+        "E-signatures",
+      ],
+      color: "from-pink-400 to-pink-600",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -76,6 +189,137 @@ export default function AboutPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What Makes Nyumba Different */}
+      <section className="py-20 bg-gradient-to-br from-primary-600 to-primary-800 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              What Makes Nyumba Different?
+            </h2>
+            <p className="text-xl text-primary-100 max-w-3xl mx-auto">
+              We&apos;re not just another property listing site. Nyumba is
+              Zambia&apos;s first end-to-end digital real estate infrastructure.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {differentiators.map((diff, idx) => (
+              <div
+                key={idx}
+                className={`bg-white/10 backdrop-blur-sm rounded-2xl p-8 border-2 ${
+                  activeDiff === idx
+                    ? "border-white shadow-2xl"
+                    : "border-white/20"
+                } hover:border-white hover:bg-white/20 transition-all duration-300 cursor-pointer`}
+                onClick={() => setActiveDiff(activeDiff === idx ? null : idx)}
+              >
+                <div className="flex items-start gap-4 mb-4">
+                  <div
+                    className={`text-5xl bg-gradient-to-br ${diff.color} rounded-xl p-3 flex-shrink-0`}
+                  >
+                    {diff.icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+                        {diff.number}
+                      </div>
+                      <h3 className="text-2xl font-bold">{diff.title}</h3>
+                    </div>
+                    <p className="text-primary-100 text-sm font-medium mb-3">
+                      {diff.subtitle}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-white/90 mb-4 leading-relaxed">
+                  {diff.description}
+                </p>
+
+                {activeDiff === idx && (
+                  <div className="mt-6 pt-6 border-t border-white/20 animate-fadeIn">
+                    <h4 className="text-sm font-semibold mb-3 text-primary-100">
+                      KEY FEATURES:
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {diff.features.map((feature, fIdx) => (
+                        <div
+                          key={fIdx}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <svg
+                            className="w-4 h-4 text-success-400 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 text-xs text-primary-200 flex items-center gap-1">
+                  {activeDiff === idx ? (
+                    <>
+                      <span>Click to collapse</span>
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 15l7-7 7 7"
+                        />
+                      </svg>
+                    </>
+                  ) : (
+                    <>
+                      <span>Click to learn more</span>
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <div className="inline-block bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-6 border-2 border-white/30">
+              <p className="text-2xl font-bold mb-2">
+                Nyumba = NoBroker + AI + Multi-Bank Financing
+              </p>
+              <p className="text-primary-100">
+                Built specifically for African markets where trust and
+                transparency matter most
+              </p>
             </div>
           </div>
         </div>

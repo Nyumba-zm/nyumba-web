@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { LenderCard, LenderComparison } from "@/components/features/finance";
+import {
+  LenderCard,
+  LenderComparison,
+  MultiBankMatcher,
+} from "@/components/features/finance";
 import { mockLenders } from "@/lib/mockFeatureData";
 import { Button } from "@/components/ui/Button";
 
@@ -76,6 +80,13 @@ export default function LendersPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        {/* Multi-Bank Matcher */}
+        <div className="mb-12">
+          <MultiBankMatcher />
+        </div>
+
+        <div className="border-t-2 border-gray-200 my-12" />
+
         {/* Comparison Bar */}
         {selectedLenders.length > 0 && (
           <div className="bg-primary-50 border-2 border-primary-300 rounded-lg p-4 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
