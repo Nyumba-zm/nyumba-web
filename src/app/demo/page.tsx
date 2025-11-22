@@ -4,6 +4,7 @@ import { DocumentVerification } from "@/components/shared/DocumentVerification";
 import { MarketTrends } from "@/components/shared/MarketTrends";
 import { AnimatedStats } from "@/components/shared/AnimatedStats";
 import { EcosystemNetwork } from "@/components/shared/EcosystemNetwork";
+import { InteractiveMap } from "@/components/shared/InteractiveMap";
 
 export default function DemoPage() {
   return (
@@ -36,7 +37,7 @@ export default function DemoPage() {
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
             <AnimatedStats
               stats={[
-                { label: "Simulations Available", value: 6, suffix: "" },
+                { label: "Simulations Available", value: 7, suffix: "" },
                 {
                   label: "Interactive Demos",
                   value: 100,
@@ -95,8 +96,23 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* Ecosystem Network */}
+      {/* Interactive Map */}
       <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Property Map Explorer
+            </h2>
+            <p className="text-xl text-gray-600">
+              Interactive map view with area insights and property locations
+            </p>
+          </div>
+          <InteractiveMap />
+        </div>
+      </section>
+
+      {/* Ecosystem Network */}
+      <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
