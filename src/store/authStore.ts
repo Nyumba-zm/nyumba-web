@@ -5,7 +5,7 @@ import { persist } from 'zustand/middleware';
 import type { User, AuthState } from '@/types/user';
 
 interface AuthStore extends AuthState {
-  login: (user: User, accessToken: string, refreshToken: string) => void;
+  login: (user: User, accessToken: string, refreshToken?: string) => void;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
   setLoading: (isLoading: boolean) => void;
@@ -24,7 +24,7 @@ export const useAuthStore = create<AuthStore>()(
         set({
           user,
           accessToken,
-          refreshToken,
+          refreshToken: refreshToken || null,
           isAuthenticated: true,
           isLoading: false,
         });

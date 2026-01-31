@@ -1,17 +1,12 @@
-import {
-  Property,
-  PropertyType,
-  PropertyStatus,
-  ListingType,
-} from "@/types/property";
+import type { Property } from "@/types/property";
 
 export const mockProperties: Property[] = [
   {
     id: "1",
     title: "Modern 4BR Home in Kabulonga",
     description: "Beautiful family home with pool and garden",
-    propertyType: PropertyType.HOUSE,
-    listingType: ListingType.SALE,
+    propertyType: "house",
+    listingType: "sale",
     price: 3800000,
     bedrooms: 4,
     bathrooms: 3,
@@ -19,7 +14,7 @@ export const mockProperties: Property[] = [
     address: "123 Leopards Hill Rd",
     neighborhood: "Kabulonga",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "1",
@@ -40,8 +35,8 @@ export const mockProperties: Property[] = [
     id: "2",
     title: "Cozy 3BR in Rhodes Park",
     description: "Perfect starter home in quiet neighborhood",
-    propertyType: PropertyType.HOUSE,
-    listingType: ListingType.SALE,
+    propertyType: "house",
+    listingType: "sale",
     price: 2150000,
     bedrooms: 3,
     bathrooms: 2,
@@ -49,7 +44,7 @@ export const mockProperties: Property[] = [
     address: "45 Central Street",
     neighborhood: "Rhodes Park",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "2",
@@ -70,8 +65,8 @@ export const mockProperties: Property[] = [
     id: "3",
     title: "Modern 3BR Family Home in Ibex Hill",
     description: "Spacious family home in desirable neighborhood",
-    propertyType: PropertyType.HOUSE,
-    listingType: ListingType.SALE,
+    propertyType: "house",
+    listingType: "sale",
     price: 1900000,
     bedrooms: 3,
     bathrooms: 2,
@@ -79,7 +74,7 @@ export const mockProperties: Property[] = [
     address: "Ibex Hill Road",
     neighborhood: "Ibex Hill",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "3",
@@ -100,8 +95,8 @@ export const mockProperties: Property[] = [
     id: "4",
     title: "Compact 2BR Starter Home in Makeni",
     description: "Affordable starter home perfect for first-time buyers",
-    propertyType: PropertyType.HOUSE,
-    listingType: ListingType.SALE,
+    propertyType: "house",
+    listingType: "sale",
     price: 1500000,
     bedrooms: 2,
     bathrooms: 2,
@@ -109,7 +104,7 @@ export const mockProperties: Property[] = [
     address: "Makeni Main Road",
     neighborhood: "Makeni",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "4",
@@ -130,8 +125,8 @@ export const mockProperties: Property[] = [
     id: "5",
     title: "Luxury 5BR Estate Home in Longacres",
     description: "Stunning luxury estate with premium finishes throughout",
-    propertyType: PropertyType.HOUSE,
-    listingType: ListingType.SALE,
+    propertyType: "house",
+    listingType: "sale",
     price: 4200000,
     bedrooms: 5,
     bathrooms: 4,
@@ -139,7 +134,7 @@ export const mockProperties: Property[] = [
     address: "Longacres Boulevard",
     neighborhood: "Longacres",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "5",
@@ -165,8 +160,8 @@ export const mockProperties: Property[] = [
     id: "6",
     title: "Beautiful 4BR Home in Olympia",
     description: "Well-maintained family home in established neighborhood",
-    propertyType: PropertyType.HOUSE,
-    listingType: ListingType.SALE,
+    propertyType: "house",
+    listingType: "sale",
     price: 2950000,
     bedrooms: 4,
     bathrooms: 3,
@@ -174,7 +169,7 @@ export const mockProperties: Property[] = [
     address: "Olympia Park Drive",
     neighborhood: "Olympia",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "6",
@@ -197,8 +192,8 @@ export const mockProperties: Property[] = [
     title: "Spacious 3BR Apartment in Woodlands",
     description:
       "Modern apartment with great amenities, perfect for professionals or small families",
-    propertyType: PropertyType.APARTMENT,
-    listingType: ListingType.RENT,
+    propertyType: "apartment",
+    listingType: "rent",
     price: 8500,
     bedrooms: 3,
     bathrooms: 2,
@@ -206,7 +201,7 @@ export const mockProperties: Property[] = [
     address: "Woodlands Shopping Centre Area",
     neighborhood: "Woodlands",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "7",
@@ -227,8 +222,8 @@ export const mockProperties: Property[] = [
     id: "8",
     title: "Luxury 2BR Penthouse in Mass Media",
     description: "Executive penthouse with stunning views and premium finishes",
-    propertyType: PropertyType.APARTMENT,
-    listingType: ListingType.RENT,
+    propertyType: "apartment",
+    listingType: "rent",
     price: 12000,
     bedrooms: 2,
     bathrooms: 2,
@@ -236,7 +231,7 @@ export const mockProperties: Property[] = [
     address: "Mass Media Area",
     neighborhood: "Mass Media",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "8",
@@ -258,8 +253,8 @@ export const mockProperties: Property[] = [
     title: "Affordable 2BR Flat in Chelston",
     description:
       "Budget-friendly apartment in secure complex, ideal for young professionals",
-    propertyType: PropertyType.APARTMENT,
-    listingType: ListingType.RENT,
+    propertyType: "apartment",
+    listingType: "rent",
     price: 4500,
     bedrooms: 2,
     bathrooms: 1,
@@ -267,7 +262,7 @@ export const mockProperties: Property[] = [
     address: "Chelston Area",
     neighborhood: "Chelston",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "9",
@@ -288,8 +283,8 @@ export const mockProperties: Property[] = [
     id: "10",
     title: "Family 4BR Townhouse in Sunningdale",
     description: "Spacious townhouse with garden, perfect for families",
-    propertyType: PropertyType.TOWNHOUSE,
-    listingType: ListingType.RENT,
+    propertyType: "townhouse",
+    listingType: "rent",
     price: 15000,
     bedrooms: 4,
     bathrooms: 3,
@@ -297,7 +292,7 @@ export const mockProperties: Property[] = [
     address: "Sunningdale Residential Area",
     neighborhood: "Sunningdale",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "10",
@@ -323,8 +318,8 @@ export const mockProperties: Property[] = [
     id: "11",
     title: "Modern 1BR Studio in Roma",
     description: "Compact studio apartment perfect for singles or students",
-    propertyType: PropertyType.APARTMENT,
-    listingType: ListingType.RENT,
+    propertyType: "apartment",
+    listingType: "rent",
     price: 3000,
     bedrooms: 1,
     bathrooms: 1,
@@ -332,7 +327,7 @@ export const mockProperties: Property[] = [
     address: "Roma Area",
     neighborhood: "Roma",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "11",
@@ -354,8 +349,8 @@ export const mockProperties: Property[] = [
     title: "Executive 3BR Townhouse in Kabulonga",
     description:
       "Premium townhouse in prestigious neighborhood with excellent amenities",
-    propertyType: PropertyType.TOWNHOUSE,
-    listingType: ListingType.RENT,
+    propertyType: "townhouse",
+    listingType: "rent",
     price: 18000,
     bedrooms: 3,
     bathrooms: 3,
@@ -363,7 +358,7 @@ export const mockProperties: Property[] = [
     address: "Kabulonga Extension",
     neighborhood: "Kabulonga",
     city: "Lusaka",
-    status: PropertyStatus.ACTIVE,
+    status: "active",
     images: [
       {
         id: "12",

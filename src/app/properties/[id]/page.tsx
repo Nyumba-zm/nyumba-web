@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { mockProperties } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils/format";
 import { Button } from "@/components/ui/Button";
@@ -16,27 +16,129 @@ import {
   mockNeighborhoodData,
   mockComparableProperties,
 } from "@/lib/mockFeatureData";
+import { useProperty, useSimilarProperties, useTrackPropertyView, useSaveProperty } from "@/lib/hooks";
+import { useAuthStore } from "@/store/authStore";
+import { useToast } from "@/components/ui/Toast";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 
 export default function PropertyDetailPage() {
   const params = useParams();
-  const property = mockProperties.find((p) => p.id === params.id);
+  const propertyId = params.id as string;
+  const { isAuthenticated } = useAuthStore();
+  const { addToast } = useToast();
   const [showContactModal, setShowContactModal] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Fetch property from API
+  const { data: apiProperty, isLoading, error } = useProperty(propertyId);
+  const { data: similarProperties } = useSimilarProperties(propertyId, 4);
+  const trackView = useTrackPropertyView();
+  const saveProperty = useSaveProperty();
+
+  // Track view on mount
+  useEffect(() => {
+    if (propertyId) {
+      trackView.mutate(propertyId);
+    }
+  }, [propertyId]);
+
+  // Use API data with mock fallback
+  const property = useMemo(() => {
+    if (apiProperty) {
+      return apiProperty;
+    }
+    // Fallback to mock data
+    return mockProperties.find((p) => p.id === propertyId);
+  }, [apiProperty, propertyId]);
+
+  const handleSaveProperty = () => {
+    if (!isAuthenticated) {
+      addToast("Please log in to save properties", "info");
+      return;
+    }
+
+    saveProperty.mutate(propertyId, {
+      onSuccess: () => {
+        setIsSaved(!isSaved);
+        addToast(isSaved ? "Property removed from saved" : "Property saved!", "success");
+      },
+      onError: () => {
+        addToast("Failed to save property", "error");
+      },
+    });
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Image skeleton */}
+        <div className="h-96 md:h-[500px] w-full bg-gray-200 animate-pulse" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="h-10 bg-gray-200 rounded animate-pulse mb-4 w-3/4" />
+                <div className="h-6 bg-gray-200 rounded animate-pulse mb-6 w-1/2" />
+                <div className="h-12 bg-gray-200 rounded animate-pulse mb-6 w-1/3" />
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-16 bg-gray-200 rounded animate-pulse" />
+                  ))}
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-4 bg-gray-200 rounded animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="h-8 bg-gray-200 rounded animate-pulse mb-4" />
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-12 bg-gray-200 rounded animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!property) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-8 h-8 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
             Property Not Found
           </h1>
           <p className="text-gray-600 mb-8">
-            The property you&apos;re looking for doesn&apos;t exist.
+            The property you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <Link href="/properties">
-            <Button>Back to Properties</Button>
+            <Button>Browse Properties</Button>
           </Link>
         </div>
       </div>
@@ -46,15 +148,16 @@ export default function PropertyDetailPage() {
   const primaryImage =
     property.images.find((img) => img.isPrimary) || property.images[0];
 
-  // Mock verification status (would come from backend in production)
-  const isVerified = property.isFeatured; // Using featured as proxy for verified
+  const isVerified = property.isVerified ?? property.isFeatured ?? false;
 
-  // Mock valuation data
-  const estimatedValue = property.price * 1.05; // Slight variance
-  const pricePerSqm = Math.round(property.price / property.squareMeters);
+  // Valuation data
+  const estimatedValue = property.price * 1.05;
+  const squareMeters = property.squareMeters ?? property.areaSqm ?? 1;
+  const pricePerSqm = Math.round(property.price / squareMeters);
 
-  // Get neighborhood data
-  const neighborhoodKey = property.neighborhood
+  // Neighborhood data
+  const neighborhood = property.neighborhood ?? property.city ?? "unknown";
+  const neighborhoodKey = neighborhood
     .toLowerCase()
     .replace(/\s+/g, "") as keyof typeof mockNeighborhoodData;
   const neighborhoodData =
@@ -62,6 +165,17 @@ export default function PropertyDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Error banner */}
+      {error && (
+        <div className="bg-yellow-50 border-b border-yellow-200 py-2">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <p className="text-sm text-yellow-800">
+              Some data may be outdated. Showing cached information.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Image Gallery */}
       <div className="relative h-96 md:h-[500px] w-full">
         <Image
@@ -103,7 +217,8 @@ export default function PropertyDetailPage() {
                       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
-                    {property.address}, {property.neighborhood}, {property.city}
+                    {property.address ?? property.street}, {neighborhood},{" "}
+                    {property.city}
                   </p>
                 </div>
                 <VerificationBadge isVerified={isVerified} type="listing" />
@@ -111,6 +226,9 @@ export default function PropertyDetailPage() {
 
               <div className="text-4xl font-bold text-primary-500 mb-6">
                 {formatCurrency(property.price)}
+                {property.listingType === "rent" && (
+                  <span className="text-lg text-gray-500 font-normal">/month</span>
+                )}
               </div>
 
               {/* Property Stats */}
@@ -129,7 +247,7 @@ export default function PropertyDetailPage() {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">
-                    {property.squareMeters}
+                    {squareMeters}
                   </div>
                   <div className="text-gray-600 text-sm">Square Meters</div>
                 </div>
@@ -213,7 +331,7 @@ export default function PropertyDetailPage() {
               estimatedValue={estimatedValue}
               confidenceLevel="high"
               pricePerSqm={pricePerSqm}
-              comparableCount={mockComparableProperties.length}
+              comparableCount={similarProperties?.length ?? mockComparableProperties.length}
               className="mb-6"
             />
 
@@ -226,8 +344,10 @@ export default function PropertyDetailPage() {
             {/* Neighborhood Insights */}
             <NeighborhoodInsights data={neighborhoodData} className="mb-6" />
 
-            {/* Loan Calculator */}
-            <LoanCalculator propertyPrice={property.price} className="mb-6" />
+            {/* Loan Calculator - only for sale properties */}
+            {property.listingType === "sale" && (
+              <LoanCalculator propertyPrice={property.price} className="mb-6" />
+            )}
           </div>
 
           {/* Sidebar */}
@@ -253,8 +373,18 @@ export default function PropertyDetailPage() {
                 >
                   Contact Agent
                 </Button>
-                <Button className="w-full" size="lg" variant="outline">
-                  Save Property
+                <Button
+                  className="w-full"
+                  size="lg"
+                  variant="outline"
+                  onClick={handleSaveProperty}
+                  disabled={saveProperty.isPending}
+                >
+                  {saveProperty.isPending
+                    ? "Saving..."
+                    : isSaved
+                    ? "Saved"
+                    : "Save Property"}
                 </Button>
               </div>
 
@@ -284,7 +414,7 @@ export default function PropertyDetailPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Views:</span>
                     <span className="font-medium text-gray-900">
-                      {property.viewCount}
+                      {property.viewCount ?? 0}
                     </span>
                   </div>
                 </div>

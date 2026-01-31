@@ -1,19 +1,29 @@
 "use client";
 
+import { useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { PropertyGrid } from "@/components/property/PropertyGrid";
 import { mockProperties } from "@/lib/mockData";
+import { useFeaturedProperties } from "@/lib/hooks";
 import Link from "next/link";
 import Image from "next/image";
 import { AnimatedStats } from "@/components/shared/AnimatedStats";
 import { EcosystemNetwork } from "@/components/shared/EcosystemNetwork";
 
 export default function HomePage() {
-  // Show first 6 properties on home page
-  const featuredProperties = mockProperties.slice(0, 6);
+  // Fetch featured properties from API with mock fallback
+  const { data: apiProperties, isLoading } = useFeaturedProperties(6);
+
+  const featuredProperties = useMemo(() => {
+    if (apiProperties && apiProperties.length > 0) {
+      return apiProperties;
+    }
+    // Fallback to mock data
+    return mockProperties.filter((p) => p.isFeatured).slice(0, 6);
+  }, [apiProperties]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center">
         <div className="absolute inset-0">
@@ -149,7 +159,23 @@ export default function HomePage() {
             </p>
           </div>
 
-          <PropertyGrid properties={featuredProperties} />
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-lg shadow-md p-4 animate-pulse"
+                >
+                  <div className="h-48 bg-gray-200 rounded-lg mb-4" />
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
+                  <div className="h-6 bg-gray-200 rounded w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <PropertyGrid properties={featuredProperties} />
+          )}
 
           <div className="text-center mt-12">
             <Link href="/properties">

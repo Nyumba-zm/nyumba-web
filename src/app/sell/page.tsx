@@ -1,10 +1,70 @@
 "use client";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { AuthGuard } from "@/components/auth";
+import { useCreateProperty } from "@/lib/hooks";
+import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { PropertyType, ListingType, PROPERTY_TYPE_LABELS } from "@/types/property";
 
-export default function SellPage() {
+// Form validation schema
+const createPropertySchema = z.object({
+  title: z.string().min(5, "Title must be at least 5 characters"),
+  description: z.string().min(20, "Description must be at least 20 characters"),
+  propertyType: z.enum(["apartment", "house", "land", "commercial", "townhouse", "villa", "studio"]),
+  listingType: z.enum(["sale", "rent"]),
+  price: z.number().min(1, "Price is required"),
+  street: z.string().min(3, "Street address is required"),
+  city: z.string().min(2, "City is required"),
+  county: z.string().min(2, "County is required"),
+  bedrooms: z.number().min(0, "Bedrooms must be 0 or more"),
+  bathrooms: z.number().min(0, "Bathrooms must be 0 or more"),
+  areaSqm: z.number().min(1, "Area is required"),
+});
+
+type CreatePropertyFormData = z.infer<typeof createPropertySchema>;
+
+function SellPageContent() {
+  const router = useRouter();
+  const { addToast } = useToast();
+  const createProperty = useCreateProperty();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<CreatePropertyFormData>({
+    resolver: zodResolver(createPropertySchema),
+    defaultValues: {
+      propertyType: "house",
+      listingType: "sale",
+      bedrooms: 3,
+      bathrooms: 2,
+    },
+  });
+
+  const listingType = watch("listingType");
+
+  const onSubmit = (data: CreatePropertyFormData) => {
+    createProperty.mutate(data, {
+      onSuccess: (property) => {
+        addToast("Property listed successfully!", "success");
+        router.push(`/properties/${property.id}`);
+      },
+      onError: (error) => {
+        const message =
+          error instanceof Error ? error.message : "Failed to create property";
+        addToast(message, "error");
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="py-16" style={{ backgroundColor: "#0f766e" }}>
@@ -28,7 +88,7 @@ export default function SellPage() {
             Why List with Nyumba?
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="bg-primary-100 text-primary-500 rounded-full p-4 inline-block mb-3">
                 <svg
@@ -95,46 +155,51 @@ export default function SellPage() {
           </div>
         </div>
 
-        {/* Contact Form */}
+        {/* Property Form */}
         <div className="bg-white rounded-lg shadow-md p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Get Started Today
+            Property Details
           </h2>
 
-          <form className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="fullName"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Full Name *
-                </label>
-                <Input id="fullName" type="text" required />
-              </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Title */}
+            <div>
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Property Title *
+              </label>
+              <Input
+                id="title"
+                {...register("title")}
+                placeholder="e.g., Modern 3 Bedroom House in Kabulonga"
+                error={errors.title?.message}
+              />
+            </div>
 
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Email Address *
-                </label>
-                <Input id="email" type="email" required />
-              </div>
+            {/* Description */}
+            <div>
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Description *
+              </label>
+              <textarea
+                id="description"
+                {...register("description")}
+                rows={5}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Describe your property in detail..."
+              />
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Phone Number *
-                </label>
-                <Input id="phone" type="tel" required />
-              </div>
-
+              {/* Property Type */}
               <div>
                 <label
                   htmlFor="propertyType"
@@ -144,90 +209,158 @@ export default function SellPage() {
                 </label>
                 <select
                   id="propertyType"
+                  {...register("propertyType")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  required
                 >
-                  <option value="">Select type</option>
-                  <option value="house">House</option>
-                  <option value="apartment">Apartment</option>
-                  <option value="townhouse">Townhouse</option>
-                  <option value="land">Land</option>
-                  <option value="commercial">Commercial</option>
+                  {Object.entries(PROPERTY_TYPE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Listing Type */}
+              <div>
+                <label
+                  htmlFor="listingType"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Listing Type *
+                </label>
+                <select
+                  id="listingType"
+                  {...register("listingType")}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="sale">For Sale</option>
+                  <option value="rent">For Rent</option>
                 </select>
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="location"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Property Location *
-              </label>
-              <Input
-                id="location"
-                type="text"
-                placeholder="e.g., Kabulonga, Lusaka"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="listingType"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Listing Type *
-              </label>
-              <select
-                id="listingType"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                required
-              >
-                <option value="">Select listing type</option>
-                <option value="sale">For Sale</option>
-                <option value="rent">For Rent</option>
-              </select>
-            </div>
-
+            {/* Price */}
             <div>
               <label
                 htmlFor="price"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Price (ZMW) *
+                Price (ZMW) {listingType === "rent" ? "per month" : ""} *
               </label>
               <Input
                 id="price"
                 type="number"
-                placeholder="e.g., 2500000"
-                required
+                {...register("price", { valueAsNumber: true })}
+                placeholder={listingType === "rent" ? "e.g., 8500" : "e.g., 2500000"}
+                error={errors.price?.message}
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="message"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Additional Information
-              </label>
-              <textarea
-                id="message"
-                rows={5}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="Tell us more about your property..."
-              />
+            {/* Location */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label
+                  htmlFor="street"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Street Address *
+                </label>
+                <Input
+                  id="street"
+                  {...register("street")}
+                  placeholder="e.g., 123 Main Road"
+                  error={errors.street?.message}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="city"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  City *
+                </label>
+                <Input
+                  id="city"
+                  {...register("city")}
+                  placeholder="e.g., Lusaka"
+                  error={errors.city?.message}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="county"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Neighborhood/Area *
+                </label>
+                <Input
+                  id="county"
+                  {...register("county")}
+                  placeholder="e.g., Kabulonga"
+                  error={errors.county?.message}
+                />
+              </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full">
-              Submit Listing Request
+            {/* Property Details */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label
+                  htmlFor="bedrooms"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Bedrooms *
+                </label>
+                <Input
+                  id="bedrooms"
+                  type="number"
+                  {...register("bedrooms", { valueAsNumber: true })}
+                  error={errors.bedrooms?.message}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="bathrooms"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Bathrooms *
+                </label>
+                <Input
+                  id="bathrooms"
+                  type="number"
+                  {...register("bathrooms", { valueAsNumber: true })}
+                  error={errors.bathrooms?.message}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="areaSqm"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Area (sq meters) *
+                </label>
+                <Input
+                  id="areaSqm"
+                  type="number"
+                  {...register("areaSqm", { valueAsNumber: true })}
+                  placeholder="e.g., 250"
+                  error={errors.areaSqm?.message}
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={createProperty.isPending}
+            >
+              {createProperty.isPending ? "Creating Listing..." : "List Property"}
             </Button>
           </form>
 
           <p className="text-sm text-gray-600 mt-6 text-center">
-            Our team will review your submission and contact you within 24
-            hours.
+            Your property will be reviewed and published within 24 hours.
           </p>
         </div>
 
@@ -241,5 +374,13 @@ export default function SellPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SellPage() {
+  return (
+    <AuthGuard>
+      <SellPageContent />
+    </AuthGuard>
   );
 }

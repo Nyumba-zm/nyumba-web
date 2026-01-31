@@ -30,19 +30,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-lg";
+      "inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:pointer-events-none rounded-lg";
 
     const variants = {
       primary:
-        "bg-primary-900 !text-black font-bold hover:bg-primary-800 focus:ring-primary-500 focus:ring-offset-2 shadow-md",
+        "bg-primary-600 text-white font-bold hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 focus:ring-primary-500 focus:ring-offset-2 shadow-md",
       secondary:
-        "bg-secondary-700 !text-black font-bold hover:bg-secondary-800 focus:ring-secondary-500 focus:ring-offset-2 shadow-md",
+        "bg-secondary-600 text-white font-bold hover:bg-secondary-700 dark:bg-secondary-500 dark:hover:bg-secondary-600 focus:ring-secondary-500 focus:ring-offset-2 shadow-md",
       outline:
-        "border-2 border-primary-700 bg-white !text-primary-900 font-bold hover:bg-primary-50 hover:border-primary-800 focus:ring-primary-500 focus:ring-offset-2",
+        "border-2 border-primary-600 bg-white text-primary-600 font-bold hover:bg-primary-50 hover:border-primary-700 dark:bg-transparent dark:border-primary-400 dark:text-primary-400 dark:hover:bg-primary-900/20 focus:ring-primary-500 focus:ring-offset-2",
       ghost:
-        "text-gray-700 hover:bg-gray-100 focus:ring-gray-400 focus:ring-offset-2",
+        "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-400 focus:ring-offset-2",
       danger:
-        "bg-danger-700 !text-black font-bold hover:bg-danger-800 focus:ring-danger-500 focus:ring-offset-2 shadow-md",
+        "bg-danger-600 text-white font-bold hover:bg-danger-700 dark:bg-danger-500 dark:hover:bg-danger-600 focus:ring-danger-500 focus:ring-offset-2 shadow-md",
     };
 
     const sizes = {

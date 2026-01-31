@@ -6,7 +6,7 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: "media", // Use system preference
+  darkMode: "class", // Use class for manual toggle with next-themes
   theme: {
     extend: {
       colors: {

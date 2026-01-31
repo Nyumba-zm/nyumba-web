@@ -1,19 +1,57 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
+import { useForgotPassword } from "@/lib/hooks";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordFormData,
+} from "@/lib/validations/authSchemas";
 import Link from "next/link";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
+  const { addToast } = useToast();
+  const forgotPassword = useForgotPassword();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Password reset requested for:", email);
-    // TODO: Connect to backend
-    setSubmitted(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const onSubmit = (data: ForgotPasswordFormData) => {
+    forgotPassword.mutate(data.email, {
+      onSuccess: () => {
+        setSubmittedEmail(data.email);
+        setSubmitted(true);
+        addToast("Password reset instructions sent to your email", "success");
+      },
+      onError: (error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to send reset email. Please try again.";
+        addToast(message, "error");
+      },
+    });
+  };
+
+  const handleTryAgain = () => {
+    setSubmitted(false);
+    setSubmittedEmail("");
+    reset();
   };
 
   return (
@@ -59,7 +97,9 @@ export default function ForgotPasswordPage() {
                 We&apos;ve sent password reset instructions to:
               </p>
 
-              <p className="text-primary-600 font-medium mb-6">{email}</p>
+              <p className="text-primary-600 font-medium mb-6">
+                {submittedEmail}
+              </p>
 
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <p className="text-sm text-gray-700 mb-2">
@@ -73,7 +113,7 @@ export default function ForgotPasswordPage() {
               </div>
 
               <Button
-                onClick={() => setSubmitted(false)}
+                onClick={handleTryAgain}
                 variant="outline"
                 className="w-full mb-3"
               >
@@ -91,7 +131,7 @@ export default function ForgotPasswordPage() {
         ) : (
           // Form State
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="bg-white rounded-lg shadow-md p-6 space-y-4"
           >
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -112,15 +152,18 @@ export default function ForgotPasswordPage() {
                 id="email"
                 type="email"
                 placeholder="john@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                {...register("email")}
+                error={errors.email?.message}
                 autoFocus
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              Send Reset Link
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={forgotPassword.isPending}
+            >
+              {forgotPassword.isPending ? "Sending..." : "Send Reset Link"}
             </Button>
 
             <div className="text-center pt-2">

@@ -1,43 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
+import { GuestGuard } from "@/components/auth";
+import { useLogin } from "@/lib/hooks";
+import { loginSchema } from "@/lib/validations/authSchemas";
+import { z } from "zod";
 import Link from "next/link";
 
-export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    rememberMe: false,
+type LoginFormInputs = z.input<typeof loginSchema>;
+
+function LoginForm() {
+  const { addToast } = useToast();
+  const login = useLogin();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormInputs>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Login:", formData);
-    // TODO: Connect to backend
+  const onSubmit = (data: LoginFormInputs) => {
+    login.mutate(data, {
+      onError: (error) => {
+        const message =
+          error instanceof Error ? error.message : "Login failed. Please try again.";
+        addToast(message, "error");
+      },
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Welcome Back
           </h1>
-          <p className="text-gray-600">Sign in to your Nyumba account</p>
+          <p className="text-gray-600 dark:text-gray-400">Sign in to your Nyumba account</p>
         </div>
 
         {/* Login Form */}
         <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-lg shadow-md p-6 space-y-4"
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-4"
         >
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Email Address
             </label>
@@ -45,11 +67,8 @@ export default function LoginPage() {
               id="email"
               type="email"
               placeholder="john@example.com"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              required
+              {...register("email")}
+              error={errors.email?.message}
             />
           </div>
 
@@ -64,11 +83,8 @@ export default function LoginPage() {
               id="password"
               type="password"
               placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              required
+              {...register("password")}
+              error={errors.password?.message}
             />
           </div>
 
@@ -77,10 +93,7 @@ export default function LoginPage() {
               <input
                 type="checkbox"
                 id="rememberMe"
-                checked={formData.rememberMe}
-                onChange={(e) =>
-                  setFormData({ ...formData, rememberMe: e.target.checked })
-                }
+                {...register("rememberMe")}
                 className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
               />
               <label
@@ -98,8 +111,12 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <Button type="submit" className="w-full">
-            Sign In
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={login.isPending}
+          >
+            {login.isPending ? "Signing in..." : "Sign In"}
           </Button>
         </form>
 
@@ -166,5 +183,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <GuestGuard>
+      <LoginForm />
+    </GuestGuard>
   );
 }

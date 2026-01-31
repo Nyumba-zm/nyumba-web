@@ -62,7 +62,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <Link href={`/properties/${property.id}`}>
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer group">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-900/50 overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer group">
         <div className="relative h-56">
           <Image
             src={primaryImage?.url || "/placeholder.jpg"}
@@ -101,7 +101,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           {/* Save Heart Icon */}
           <button
             onClick={handleSaveClick}
-            className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors z-10"
+            className="absolute top-2 right-2 bg-white dark:bg-gray-700 rounded-full p-2 shadow-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors z-10"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -111,7 +111,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
               fill={isSaved ? "currentColor" : "none"}
               stroke="currentColor"
               strokeWidth="2"
-              className={isSaved ? "text-red-500" : "text-gray-600"}
+              className={isSaved ? "text-red-500" : "text-gray-600 dark:text-gray-300"}
             >
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
@@ -119,30 +119,30 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         <div className="p-6">
-          <p className="text-2xl font-bold text-gray-900 mb-2">
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {formatCurrency(property.price)}
             {property.listingType === "rent" && (
-              <span className="text-base text-gray-600">/month</span>
+              <span className="text-base text-gray-600 dark:text-gray-400">/month</span>
             )}
           </p>
 
-          <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2">
             {property.title}
           </h3>
 
-          <div className="flex space-x-4 text-gray-600 mb-3 text-sm">
+          <div className="flex space-x-4 text-gray-600 dark:text-gray-400 mb-3 text-sm">
             <span>
-              <strong>{property.bedrooms}</strong> beds
+              <strong className="text-gray-900 dark:text-gray-200">{property.bedrooms}</strong> beds
             </span>
             <span>
-              <strong>{property.bathrooms}</strong> baths
+              <strong className="text-gray-900 dark:text-gray-200">{property.bathrooms}</strong> baths
             </span>
             <span>
-              <strong>{property.squareMeters}</strong> m²
+              <strong className="text-gray-900 dark:text-gray-200">{property.squareMeters}</strong> m²
             </span>
           </div>
 
-          <p className="text-gray-700 text-sm">
+          <p className="text-gray-700 dark:text-gray-300 text-sm">
             {property.neighborhood}, {property.city}
           </p>
         </div>

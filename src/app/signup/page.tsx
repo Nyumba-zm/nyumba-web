@@ -1,26 +1,70 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
+import { GuestGuard } from "@/components/auth";
+import { useRegister } from "@/lib/hooks";
+import { registerSchema } from "@/lib/validations/authSchemas";
+import { z } from "zod";
 import Link from "next/link";
 
-export default function SignupPage() {
-  const [accountType, setAccountType] = useState<"buyer" | "seller" | "agent">(
-    "buyer"
-  );
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
+type RegisterFormInputs = z.input<typeof registerSchema>;
+type AllowedRole = "buyer" | "seller" | "agent";
+
+function SignupForm() {
+  const [accountType, setAccountType] = useState<AllowedRole>("buyer");
+  const { addToast } = useToast();
+  const registerMutation = useRegister();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<RegisterFormInputs>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+      role: "buyer",
+      acceptTerms: false as unknown as true,
+    },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Signup:", { accountType, ...formData });
-    // TODO: Connect to backend
+  const onSubmit = (data: RegisterFormInputs) => {
+    registerMutation.mutate(
+      {
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone || undefined,
+        role: accountType,
+      },
+      {
+        onError: (error) => {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Registration failed. Please try again.";
+          addToast(message, "error");
+        },
+      }
+    );
+  };
+
+  const handleAccountTypeChange = (type: AllowedRole) => {
+    setAccountType(type);
+    setValue("role", type);
   };
 
   return (
@@ -42,7 +86,7 @@ export default function SignupPage() {
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
-              onClick={() => setAccountType("buyer")}
+              onClick={() => handleAccountTypeChange("buyer")}
               className={`p-3 rounded-lg border-2 transition-all ${
                 accountType === "buyer"
                   ? "border-primary-600 bg-primary-50 text-primary-700"
@@ -54,7 +98,7 @@ export default function SignupPage() {
             </button>
             <button
               type="button"
-              onClick={() => setAccountType("seller")}
+              onClick={() => handleAccountTypeChange("seller")}
               className={`p-3 rounded-lg border-2 transition-all ${
                 accountType === "seller"
                   ? "border-primary-600 bg-primary-50 text-primary-700"
@@ -66,7 +110,7 @@ export default function SignupPage() {
             </button>
             <button
               type="button"
-              onClick={() => setAccountType("agent")}
+              onClick={() => handleAccountTypeChange("agent")}
               className={`p-3 rounded-lg border-2 transition-all ${
                 accountType === "agent"
                   ? "border-primary-600 bg-primary-50 text-primary-700"
@@ -81,26 +125,40 @@ export default function SignupPage() {
 
         {/* Signup Form */}
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="bg-white rounded-lg shadow-md p-6 space-y-4"
         >
-          <div>
-            <label
-              htmlFor="fullName"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Full Name
-            </label>
-            <Input
-              id="fullName"
-              type="text"
-              placeholder="John Mwale"
-              value={formData.fullName}
-              onChange={(e) =>
-                setFormData({ ...formData, fullName: e.target.value })
-              }
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="firstName"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                First Name
+              </label>
+              <Input
+                id="firstName"
+                type="text"
+                placeholder="John"
+                {...register("firstName")}
+                error={errors.firstName?.message}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Last Name
+              </label>
+              <Input
+                id="lastName"
+                type="text"
+                placeholder="Mwale"
+                {...register("lastName")}
+                error={errors.lastName?.message}
+              />
+            </div>
           </div>
 
           <div>
@@ -114,11 +172,8 @@ export default function SignupPage() {
               id="email"
               type="email"
               placeholder="john@example.com"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              required
+              {...register("email")}
+              error={errors.email?.message}
             />
           </div>
 
@@ -127,17 +182,14 @@ export default function SignupPage() {
               htmlFor="phone"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Phone Number
+              Phone Number <span className="text-gray-400">(Optional)</span>
             </label>
             <Input
               id="phone"
               type="tel"
-              placeholder="+260 9XX XXX XXX"
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-              required
+              placeholder="+260971234567"
+              {...register("phone")}
+              error={errors.phone?.message}
             />
           </div>
 
@@ -152,12 +204,12 @@ export default function SignupPage() {
               id="password"
               type="password"
               placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              required
+              {...register("password")}
+              error={errors.password?.message}
             />
+            <p className="mt-1 text-xs text-gray-500">
+              At least 8 characters with uppercase, lowercase, and number
+            </p>
           </div>
 
           <div>
@@ -171,22 +223,19 @@ export default function SignupPage() {
               id="confirmPassword"
               type="password"
               placeholder="••••••••"
-              value={formData.confirmPassword}
-              onChange={(e) =>
-                setFormData({ ...formData, confirmPassword: e.target.value })
-              }
-              required
+              {...register("confirmPassword")}
+              error={errors.confirmPassword?.message}
             />
           </div>
 
           <div className="flex items-start">
             <input
               type="checkbox"
-              id="terms"
+              id="acceptTerms"
+              {...register("acceptTerms")}
               className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-              required
             />
-            <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
+            <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-600">
               I agree to the{" "}
               <Link
                 href="/terms"
@@ -203,9 +252,16 @@ export default function SignupPage() {
               </Link>
             </label>
           </div>
+          {errors.acceptTerms && (
+            <p className="text-sm text-red-600">{errors.acceptTerms.message}</p>
+          )}
 
-          <Button type="submit" className="w-full">
-            Create Account
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={registerMutation.isPending}
+          >
+            {registerMutation.isPending ? "Creating Account..." : "Create Account"}
           </Button>
         </form>
 
@@ -271,5 +327,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <GuestGuard>
+      <SignupForm />
+    </GuestGuard>
   );
 }

@@ -48,14 +48,26 @@
 :root {
   --background: #ffffff;
   --foreground: #1f2937;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --border: #e5e7eb;
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
 }
 
-/* Force light mode even when system prefers dark */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #ffffff;
-    --foreground: #1f2937;
-  }
+/* Dark Mode Variables */
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #334155;
+  --input-bg: #1e293b;
+  --input-border: #475569;
 }
 
 body {
@@ -66,6 +78,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 /* Improved focus visible styles for better accessibility */
@@ -73,6 +86,10 @@ body {
   outline: 2px solid #0f766e;
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+.dark *:focus-visible {
+  outline-color: #2dd4bf;
 }
 
 /* Ensure proper text contrast on colored backgrounds */
