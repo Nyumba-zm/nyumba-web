@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Tailwind v4 Theme Configuration */
 @theme {
   /* Primary (Teal) Colors */
@@ -26,6 +29,19 @@
   --color-secondary-800: #92400e;
   --color-secondary-900: #78350f;
 
+  /* Warm Stone Colors - Modern Neutral Palette */
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+  --color-stone-950: #0c0a09;
+
   /* Success Colors */
   --color-success-50: #f0fdf4;
   --color-success-500: #22c55e;
@@ -44,30 +60,32 @@
   --color-danger-700: #b91c1c;
 }
 
-/* CSS Variables for consistent theming */
+/* CSS Variables for consistent theming - Warm Stone Palette */
 :root {
-  --background: #ffffff;
-  --foreground: #1f2937;
+  --background: #fafaf9;
+  --foreground: #292524;
   --card-bg: #ffffff;
-  --card-border: #e5e7eb;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --border: #e5e7eb;
+  --card-border: #e7e5e4;
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c;
+  --border: #e7e5e4;
   --input-bg: #ffffff;
-  --input-border: #d1d5db;
+  --input-border: #d6d3d1;
+  --hero-overlay: rgba(12, 10, 9, 0.4);
 }
 
-/* Dark Mode Variables */
+/* Dark Mode Variables - Warm Dark Palette */
 .dark {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
-  --card-bg: #1e293b;
-  --card-border: #334155;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --border: #334155;
-  --input-bg: #1e293b;
-  --input-border: #475569;
+  --background: #1c1917;
+  --foreground: #fafaf9;
+  --card-bg: #292524;
+  --card-border: #44403c;
+  --muted: #292524;
+  --muted-foreground: #a8a29e;
+  --border: #44403c;
+  --input-bg: #292524;
+  --input-border: #57534e;
+  --hero-overlay: rgba(12, 10, 9, 0.6);
 }
 
 body {

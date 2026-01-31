@@ -1,140 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
-import { Button } from "@/components/ui/Button";
-import { PropertyGrid } from "@/components/property/PropertyGrid";
-import { mockProperties } from "@/lib/mockData";
-import { useFeaturedProperties } from "@/lib/hooks";
 import Link from "next/link";
-import Image from "next/image";
+import {
+  HeroSection,
+  FeaturedPropertiesSection,
+  CTASection,
+} from "@/components/landing";
 import { AnimatedStats } from "@/components/shared/AnimatedStats";
-import { EcosystemNetwork } from "@/components/shared/EcosystemNetwork";
 
 export default function HomePage() {
-  // Fetch featured properties from API with mock fallback
-  const { data: apiProperties, isLoading } = useFeaturedProperties(6);
-
-  const featuredProperties = useMemo(() => {
-    if (apiProperties && apiProperties.length > 0) {
-      return apiProperties;
-    }
-    // Fallback to mock data
-    return mockProperties.filter((p) => p.isFeatured).slice(0, 6);
-  }, [apiProperties]);
-
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center">
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1920"
-            alt="Hero"
-            fill
-            className="object-cover"
-            priority
-            unoptimized
-          />
-          <div className="absolute inset-0 bg-black/50" />
-        </div>
-
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center text-white">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
-            <svg
-              className="w-5 h-5 text-success-400"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="text-sm font-medium">
-              All listings verified with KYC
-            </span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            Where Nyumbaling Happens
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 text-gray-100">
-            AI-powered property valuations, verified listings, and smart
-            financing — all in one place
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/properties">
-              <Button size="lg" className="min-w-[200px]">
-                Browse Properties
-              </Button>
-            </Link>
-            <Link href="/demo">
-              <Button
-                size="lg"
-                variant="outline"
-                className="min-w-[200px] bg-white/10 backdrop-blur-sm border-white text-white hover:bg-white hover:text-primary-600"
-              >
-                🎯 See Live Demos
-              </Button>
-            </Link>
-          </div>
-
-          <div className="mt-12 flex items-center justify-center gap-8 text-sm flex-wrap">
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-primary-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
-              <span>Verified Listings</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-primary-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-              <span>AI Valuations</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-primary-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>Smart Financing</span>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-900">
+      {/* Hero Section with Search */}
+      <HeroSection />
 
       {/* Stats Section */}
-      <section className="py-16 bg-gradient-to-br from-primary-600 to-primary-700 text-white -mt-20 relative z-20">
+      <section className="py-16 bg-gradient-to-br from-primary-600 to-primary-700 text-white">
         <div className="max-w-7xl mx-auto px-6">
           <AnimatedStats
             stats={[
@@ -148,70 +29,25 @@ export default function HomePage() {
       </section>
 
       {/* Featured Properties Section */}
-      <section className="py-16 sm:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Featured Properties in Lusaka
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Discover your perfect home today
-            </p>
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-lg shadow-md p-4 animate-pulse"
-                >
-                  <div className="h-48 bg-gray-200 rounded-lg mb-4" />
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
-                  <div className="h-6 bg-gray-200 rounded w-1/3" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <PropertyGrid properties={featuredProperties} />
-          )}
-
-          <div className="text-center mt-12">
-            <Link href="/properties">
-              <Button
-                size="lg"
-                style={{
-                  backgroundColor: "#0d9488",
-                  color: "#ffffff",
-                  padding: "12px 24px",
-                  minWidth: "200px",
-                }}
-              >
-                View All Properties
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <FeaturedPropertiesSection />
 
       {/* Features Section */}
-      <section className="py-16 sm:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="py-16 lg:py-24 bg-white dark:bg-stone-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold text-stone-900 dark:text-stone-50 mb-4">
               Everything You Need in One Platform
             </h2>
-            <p className="text-gray-600 text-lg max-w-3xl mx-auto">
+            <p className="text-stone-600 dark:text-stone-400 text-lg max-w-3xl mx-auto">
               From property search to financing, we&apos;ve built a complete
               ecosystem for your real estate journey
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition group">
-              <div className="bg-primary-100 text-primary-600 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
+            {/* Feature 1 - KYC Verification */}
+            <div className="bg-stone-50 dark:bg-stone-900 p-8 rounded-xl border border-stone-200 dark:border-stone-700 hover:shadow-lg transition group">
+              <div className="bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
                 <svg
                   className="w-8 h-8"
                   fill="none"
@@ -226,37 +62,27 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-3">
                 KYC Verification
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-stone-600 dark:text-stone-400 mb-4">
                 Every property owner and agent is verified through our
                 comprehensive KYC process. Say goodbye to fraudulent listings.
               </p>
               <Link
                 href="/about"
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1"
+                className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm flex items-center gap-1"
               >
                 Learn more
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
             </div>
 
-            {/* Feature 2 */}
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition group">
-              <div className="bg-primary-100 text-primary-600 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
+            {/* Feature 2 - AI Valuation */}
+            <div className="bg-stone-50 dark:bg-stone-900 p-8 rounded-xl border border-stone-200 dark:border-stone-700 hover:shadow-lg transition group">
+              <div className="bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
                 <svg
                   className="w-8 h-8"
                   fill="none"
@@ -271,37 +97,27 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-3">
                 AI Property Valuation
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-stone-600 dark:text-stone-400 mb-4">
                 Get instant, data-driven property valuations powered by AI.
                 Compare prices with similar properties in the area.
               </p>
               <Link
                 href="/properties"
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1"
+                className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm flex items-center gap-1"
               >
                 Try it now
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
             </div>
 
-            {/* Feature 3 */}
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition group">
-              <div className="bg-primary-100 text-primary-600 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
+            {/* Feature 3 - Smart Financing */}
+            <div className="bg-stone-50 dark:bg-stone-900 p-8 rounded-xl border border-stone-200 dark:border-stone-700 hover:shadow-lg transition group">
+              <div className="bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
                 <svg
                   className="w-8 h-8"
                   fill="none"
@@ -316,37 +132,27 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-3">
                 Smart Financing
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-stone-600 dark:text-stone-400 mb-4">
                 Compare loan offers from 50+ partner lenders. Calculate monthly
                 payments and get pre-approved instantly.
               </p>
               <Link
                 href="/finance"
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1"
+                className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm flex items-center gap-1"
               >
                 Compare lenders
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
             </div>
 
-            {/* Feature 4 */}
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition group">
-              <div className="bg-primary-100 text-primary-600 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
+            {/* Feature 4 - Neighborhood Insights */}
+            <div className="bg-stone-50 dark:bg-stone-900 p-8 rounded-xl border border-stone-200 dark:border-stone-700 hover:shadow-lg transition group">
+              <div className="bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
                 <svg
                   className="w-8 h-8"
                   fill="none"
@@ -367,37 +173,27 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-3">
                 Neighborhood Insights
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-stone-600 dark:text-stone-400 mb-4">
                 Make informed decisions with detailed data on schools, safety,
                 amenities, and community ratings.
               </p>
               <Link
-                href="/properties"
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1"
+                href="/neighborhood"
+                className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm flex items-center gap-1"
               >
                 Explore areas
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
             </div>
 
-            {/* Feature 5 */}
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition group">
-              <div className="bg-primary-100 text-primary-600 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
+            {/* Feature 5 - Advanced Search */}
+            <div className="bg-stone-50 dark:bg-stone-900 p-8 rounded-xl border border-stone-200 dark:border-stone-700 hover:shadow-lg transition group">
+              <div className="bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
                 <svg
                   className="w-8 h-8"
                   fill="none"
@@ -412,37 +208,27 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-3">
                 Advanced Search
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-stone-600 dark:text-stone-400 mb-4">
                 Filter by location, price, bedrooms, amenities, and more. Save
                 your searches and get instant notifications.
               </p>
               <Link
                 href="/properties"
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1"
+                className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm flex items-center gap-1"
               >
                 Start searching
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
             </div>
 
-            {/* Feature 6 */}
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition group">
-              <div className="bg-primary-100 text-primary-600 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
+            {/* Feature 6 - 24/7 Support */}
+            <div className="bg-stone-50 dark:bg-stone-900 p-8 rounded-xl border border-stone-200 dark:border-stone-700 hover:shadow-lg transition group">
+              <div className="bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 rounded-xl p-4 inline-block mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
                 <svg
                   className="w-8 h-8"
                   fill="none"
@@ -457,30 +243,20 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-3">
                 24/7 Support
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-stone-600 dark:text-stone-400 mb-4">
                 Our dedicated support team is always ready to help. Check our
                 FAQ or contact us anytime.
               </p>
               <Link
                 href="/faq"
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1"
+                className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm flex items-center gap-1"
               >
                 Get help
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
             </div>
@@ -489,13 +265,13 @@ export default function HomePage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-16 sm:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="py-16 lg:py-24 bg-stone-50 dark:bg-stone-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold text-stone-900 dark:text-stone-50 mb-4">
               How Nyumba Works
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-stone-600 dark:text-stone-400 text-lg">
               Your property journey simplified in three easy steps
             </p>
           </div>
@@ -505,10 +281,10 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-primary-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 1
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-3">
                 Search & Discover
               </h3>
-              <p className="text-gray-600">
+              <p className="text-stone-600 dark:text-stone-400">
                 Browse verified listings with advanced filters. Get AI
                 valuations and neighborhood insights for every property.
               </p>
@@ -518,10 +294,10 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-primary-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 2
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-3">
                 Connect & Compare
               </h3>
-              <p className="text-gray-600">
+              <p className="text-stone-600 dark:text-stone-400">
                 Contact verified sellers directly. Compare financing options
                 from multiple lenders to find the best deal.
               </p>
@@ -531,106 +307,32 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-primary-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 3
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Move In</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-3">
+                Move In
+              </h3>
+              <p className="text-stone-600 dark:text-stone-400">
                 Complete your transaction securely on our platform. Schedule
                 tours, handle paperwork, and get your keys.
               </p>
             </div>
           </div>
-
-          <div className="text-center mt-12">
-            <Link href="/about">
-              <Button size="lg" variant="outline">
-                Learn More About Us
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Ecosystem Network Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              One Platform. Complete Ecosystem.
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Nyumba connects all players in the real estate journey — from
-              buyers and sellers to banks, inspectors, and agents — in a single
-              unified network.
-            </p>
-          </div>
-
-          <div className="mb-12">
-            <EcosystemNetwork />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-            <div className="text-center p-6">
-              <div className="text-5xl mb-4">🤝</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Seamless Connections
-              </h3>
-              <p className="text-gray-600">
-                All participants communicate through one secure platform,
-                eliminating WhatsApp chaos and scattered conversations.
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="text-5xl mb-4">⚡</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Digital Workflows
-              </h3>
-              <p className="text-gray-600">
-                From property search to financing to closing, every step is
-                digitized and tracked in real-time.
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="text-5xl mb-4">🔒</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Trust & Security
-              </h3>
-              <p className="text-gray-600">
-                Every participant is verified, every document is authenticated,
-                and every transaction is protected.
-              </p>
-            </div>
-          </div>
-
-          <div className="text-center mt-8">
-            <Link href="/trust">
-              <Button
-                size="lg"
-                style={{
-                  backgroundColor: "#0d9488",
-                  color: "#ffffff",
-                  padding: "12px 32px",
-                }}
-              >
-                Learn About Our Trust Layer
-              </Button>
-            </Link>
-          </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 sm:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="py-16 lg:py-24 bg-white dark:bg-stone-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold text-stone-900 dark:text-stone-50 mb-4">
               What Our Users Say
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-stone-600 dark:text-stone-400 text-lg">
               Join thousands of satisfied property buyers and sellers
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-stone-50 dark:bg-stone-900 p-8 rounded-xl border border-stone-200 dark:border-stone-700">
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (
                   <svg
@@ -643,27 +345,27 @@ export default function HomePage() {
                   </svg>
                 ))}
               </div>
-              <p className="text-gray-700 mb-4">
+              <p className="text-stone-700 dark:text-stone-300 mb-4">
                 &quot;Nyumba made finding my dream home so easy! The AI
                 valuation helped me make an informed decision, and the
                 verification gave me peace of mind.&quot;
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 font-bold">
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold">
                   JM
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">
+                  <div className="font-semibold text-stone-900 dark:text-stone-50">
                     Joseph Mwanza
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-stone-600 dark:text-stone-400">
                     Property Buyer, Lusaka
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-stone-50 dark:bg-stone-900 p-8 rounded-xl border border-stone-200 dark:border-stone-700">
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (
                   <svg
@@ -676,25 +378,27 @@ export default function HomePage() {
                   </svg>
                 ))}
               </div>
-              <p className="text-gray-700 mb-4">
+              <p className="text-stone-700 dark:text-stone-300 mb-4">
                 &quot;As a real estate agent, Nyumba has transformed how I do
                 business. The verified listings build trust, and I get serious
                 buyers only.&quot;
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 font-bold">
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold">
                   CK
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">
+                  <div className="font-semibold text-stone-900 dark:text-stone-50">
                     Chanda Kabwe
                   </div>
-                  <div className="text-sm text-gray-600">Real Estate Agent</div>
+                  <div className="text-sm text-stone-600 dark:text-stone-400">
+                    Real Estate Agent
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-stone-50 dark:bg-stone-900 p-8 rounded-xl border border-stone-200 dark:border-stone-700">
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (
                   <svg
@@ -707,20 +411,22 @@ export default function HomePage() {
                   </svg>
                 ))}
               </div>
-              <p className="text-gray-700 mb-4">
+              <p className="text-stone-700 dark:text-stone-300 mb-4">
                 &quot;The financing comparison feature saved me thousands! I
                 compared offers from different banks and found the best rate for
                 my mortgage.&quot;
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 font-bold">
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold">
                   TP
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">
+                  <div className="font-semibold text-stone-900 dark:text-stone-50">
                     Thandiwe Phiri
                   </div>
-                  <div className="text-sm text-gray-600">First-time Buyer</div>
+                  <div className="text-sm text-stone-600 dark:text-stone-400">
+                    First-time Buyer
+                  </div>
                 </div>
               </div>
             </div>
@@ -729,45 +435,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 sm:py-20 bg-gradient-to-br from-primary-600 to-primary-700 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-            Ready to Find Your Dream Home?
-          </h2>
-          <p className="text-lg sm:text-xl mb-8 text-primary-100">
-            Join thousands of Zambians finding their perfect property with
-            Nyumba
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/properties">
-              <Button
-                size="lg"
-                className="min-w-[200px] bg-white text-primary-100 hover:bg-gray-100"
-              >
-                Browse Properties
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button
-                size="lg"
-                variant="outline"
-                className="min-w-[200px] bg-primary-500 border-white text-white hover:bg-primary-400"
-              >
-                Create Account
-              </Button>
-            </Link>
-          </div>
-          <p className="mt-6 text-sm text-primary-200">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="text-white font-medium hover:underline"
-            >
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </section>
+      <CTASection />
     </div>
   );
 }
