@@ -69,6 +69,7 @@ export default function PropertyDetailPage() {
       },
     });
   };
+  
 
   // Loading state
   if (isLoading) {
