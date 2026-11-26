@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Property } from "@/types/property";
+import Link from "next/link";
+import Image from "next/image";
+import type { Property } from "@/types/property";
 import { formatCurrency } from "@/lib/utils/format";
+import { formatLocation } from "@/lib/utils/property";
+import { useSavedPropertyIds } from "@/lib/hooks";
 import { useToast } from "@/components/ui/Toast";
 import { Badge } from "@/components/ui/Badge";
 import { VerificationBadge } from "@/components/features/verification";
-import Link from "next/link";
-import Image from "next/image";
 
 interface PropertyCardProps {
   property: Property;
@@ -15,73 +16,39 @@ interface PropertyCardProps {
 
 export function PropertyCard({ property }: PropertyCardProps) {
   const { addToast } = useToast();
-  const primaryImage =
-    property.images.find((img) => img.isPrimary) || property.images[0];
+  const { isSaved, toggleSaved } = useSavedPropertyIds();
+  const saved = isSaved(property.id);
+  const primaryImage = property.images.find((img) => img.isPrimary) ?? property.images[0];
 
-  // Initialize with lazy initializer to check localStorage on mount
-  const [isSaved, setIsSaved] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const savedProperties = JSON.parse(
-      localStorage.getItem("savedProperties") || "[]"
-    );
-    return savedProperties.includes(property.id);
-  });
-
-  const handleSaveClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const savedProperties = JSON.parse(
-      localStorage.getItem("savedProperties") || "[]"
-    );
-
-    if (isSaved) {
-      const updated = savedProperties.filter(
-        (id: string) => id !== property.id
-      );
-      localStorage.setItem("savedProperties", JSON.stringify(updated));
-      setIsSaved(false);
-      addToast("Property removed from saved", "info");
-    } else {
-      savedProperties.push(property.id);
-      localStorage.setItem("savedProperties", JSON.stringify(savedProperties));
-      setIsSaved(true);
-      addToast("Property saved successfully", "success");
-    }
+  const handleSaveClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const nowSaved = toggleSaved(property.id);
+    addToast(nowSaved ? "Saved on this device" : "Removed from saved", nowSaved ? "success" : "info");
   };
-
-  // Check if property is new (within last 7 days)
-  const isNew = useMemo(() => {
-    const now = new Date();
-    const created = new Date(property.createdAt);
-    const daysSinceCreated = Math.floor(
-      (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return daysSinceCreated <= 7;
-  }, [property.createdAt]);
 
   return (
     <Link href={`/properties/${property.id}`}>
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer group">
-        <div className="relative h-56">
-          <Image
-            src={primaryImage?.url || "/placeholder.jpg"}
-            alt={property.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            unoptimized
-          />
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-900/50 overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer group">
+        <div className="relative h-56 bg-gray-100 dark:bg-gray-700">
+          {primaryImage ? (
+            <Image
+              src={primaryImage.url}
+              alt={property.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+              No photo yet
+            </div>
+          )}
 
-          {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-2">
-            {property.isFeatured && (
-              <Badge variant="warning" size="md">
-                Featured
-              </Badge>
-            )}
-            {isNew && (
-              <Badge variant="success" size="md">
-                New
+            {property.status === "rented" && (
+              <Badge variant="danger" size="md">
+                Rented
               </Badge>
             )}
             {property.status === "sold" && (
@@ -89,29 +56,35 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 Sold
               </Badge>
             )}
+            {property.status === "draft" && (
+              <Badge variant="warning" size="md">
+                Draft
+              </Badge>
+            )}
           </div>
 
-          {/* Verification Badge */}
-          {property.isFeatured && (
+          {property.isVerified && (
             <div className="absolute bottom-2 left-2">
-              <VerificationBadge isVerified={true} type="listing" />
+              <VerificationBadge isVerified type="listing" />
             </div>
           )}
 
-          {/* Save Heart Icon */}
           <button
+            type="button"
             onClick={handleSaveClick}
-            className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors z-10"
+            aria-label={saved ? "Remove from saved" : "Save property"}
+            aria-pressed={saved}
+            className="absolute top-2 right-2 bg-white dark:bg-gray-700 rounded-full p-2 shadow-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors z-10"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
               height="20"
               viewBox="0 0 24 24"
-              fill={isSaved ? "currentColor" : "none"}
+              fill={saved ? "currentColor" : "none"}
               stroke="currentColor"
               strokeWidth="2"
-              className={isSaved ? "text-red-500" : "text-gray-600"}
+              className={saved ? "text-red-500" : "text-gray-600 dark:text-gray-300"}
             >
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
@@ -119,32 +92,30 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         <div className="p-6">
-          <p className="text-2xl font-bold text-gray-900 mb-2">
-            {formatCurrency(property.price)}
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            {formatCurrency(property.price, property.currency)}
             {property.listingType === "rent" && (
-              <span className="text-base text-gray-600">/month</span>
+              <span className="text-base text-gray-600 dark:text-gray-400">/month</span>
             )}
           </p>
 
-          <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2">
             {property.title}
           </h3>
 
-          <div className="flex space-x-4 text-gray-600 mb-3 text-sm">
+          <div className="flex space-x-4 text-gray-600 dark:text-gray-400 mb-3 text-sm">
             <span>
-              <strong>{property.bedrooms}</strong> beds
+              <strong className="text-gray-900 dark:text-gray-200">{property.bedrooms}</strong> beds
             </span>
             <span>
-              <strong>{property.bathrooms}</strong> baths
+              <strong className="text-gray-900 dark:text-gray-200">{property.bathrooms}</strong> baths
             </span>
             <span>
-              <strong>{property.squareMeters}</strong> m²
+              <strong className="text-gray-900 dark:text-gray-200">{property.areaSqm}</strong> m²
             </span>
           </div>
 
-          <p className="text-gray-700 text-sm">
-            {property.neighborhood}, {property.city}
-          </p>
+          <p className="text-gray-700 dark:text-gray-300 text-sm">{formatLocation(property)}</p>
         </div>
       </div>
     </Link>

@@ -6,7 +6,7 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: "media", // Use system preference
+  darkMode: "class", // Use class for manual toggle with next-themes
   theme: {
     extend: {
       colors: {
@@ -33,6 +33,19 @@ const config: Config = {
           700: "#b45309",
           800: "#92400e",
           900: "#78350f",
+        },
+        stone: {
+          50: "#fafaf9",
+          100: "#f5f5f4",
+          200: "#e7e5e4",
+          300: "#d6d3d1",
+          400: "#a8a29e",
+          500: "#78716c",
+          600: "#57534e",
+          700: "#44403c",
+          800: "#292524",
+          900: "#1c1917",
+          950: "#0c0a09",
         },
         success: {
           50: "#f0fdf4",

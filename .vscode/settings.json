@@ -1,0 +1,44 @@
+{
+  // Source control decorations: keep changed/untracked files visible in the explorer.
+  "git.decorations.enabled": true,
+  "explorer.decorations.colors": true,
+  "explorer.decorations.badges": true,
+  "scm.diffDecorations": "all",
+
+  // No Prettier in this repo: ESLint is the source of truth, auto-fixed on explicit save.
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.useFlatConfig": true,
+
+  // Use the workspace TypeScript, not the version bundled with VS Code.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // Tailwind IntelliSense in className attributes and the cn() helper.
+  "tailwindCSS.classAttributes": ["class", "className"],
+  "tailwindCSS.classFunctions": ["cn"],
+  "files.associations": { "*.css": "tailwindcss" },
+
+  // Hide build output from the explorer and search.
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/coverage": true
+  },
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/coverage": true,
+    "package-lock.json": true
+  },
+
+  // Nest related files under their parent in the explorer.
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "package.json": "package-lock.json, .npmrc, .nvmrc",
+    "tsconfig.json": "next-env.d.ts, tsconfig.*.json",
+    "next.config.ts": "postcss.config.mjs, eslint.config.mjs, components.json, vitest.config.ts, tailwind.config.ts",
+    ".env.example": ".env*"
+  }
+}

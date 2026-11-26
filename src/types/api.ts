@@ -1,33 +1,53 @@
 // src/types/api.ts
 
-export interface ApiError {
+/**
+ * One entry of a request-validation failure, as produced by the backend's
+ * RequestValidationError handler (nyumba-backend/src/nyumba/main.py).
+ * `field` is the Pydantic location joined with " → ", e.g. "body → address → province".
+ */
+export interface BackendFieldError {
+  field: string;
   message: string;
-  code: string;
-  details?: Record<string, unknown>;
+  type: string;
 }
 
-export interface ApiResponse<T = unknown> {
-  data: T;
-  message?: string;
-  success: boolean;
+/**
+ * Error body returned by the backend for every non-2xx response.
+ * - 422 request validation: `{detail: "Validation error", errors: [...]}`
+ * - 422 domain validation:  `{detail, field}`
+ * - 409 business rule:      `{detail, rule}`
+ * - everything else:        `{detail}`
+ */
+export interface BackendApiError {
+  detail: string;
+  errors?: BackendFieldError[];
+  field?: string | null;
+  rule?: string;
 }
 
+/**
+ * Frontend pagination shape (camelCase, with computed fields).
+ */
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+/**
+ * Pagination query parameters (frontend).
+ */
 export interface PaginationParams {
   page?: number;
-  limit?: number;
+  pageSize?: number;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
-}
+/**
+ * Currencies the backend accepts (`Currency` enum in shared_kernel).
+ */
+export type CurrencyCode = 'ZMW' | 'USD';
 
-export interface QueryParams {
-  [key: string]: string | number | boolean | undefined | null | string[];
-}
+export const DEFAULT_CURRENCY: CurrencyCode = 'ZMW';

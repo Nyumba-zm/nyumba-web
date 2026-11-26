@@ -1,69 +1,33 @@
 // src/store/authStore.ts
+//
+// Holds who is logged in. Tokens are NOT stored here — they live only in
+// `tokenStorage` (src/lib/api/client.ts) so a token refresh can never leave a stale copy.
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User, AuthState } from '@/types/user';
+import type { User } from '@/types/user';
 
-interface AuthStore extends AuthState {
-  login: (user: User, accessToken: string, refreshToken: string) => void;
+interface AuthStore {
+  user: User | null;
+  isAuthenticated: boolean;
+  /** Retained for AuthGuard/GuestGuard; true while a session check is in flight. */
+  isLoading: boolean;
+  setUser: (user: User) => void;
   logout: () => void;
-  updateUser: (user: Partial<User>) => void;
-  setLoading: (isLoading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       user: null,
-      accessToken: null,
-      refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
-
-      login: (user, accessToken, refreshToken) => {
-        set({
-          user,
-          accessToken,
-          refreshToken,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-      },
-
-      logout: () => {
-        set({
-          user: null,
-          accessToken: null,
-          refreshToken: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
-        
-        // Clear from localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-        }
-      },
-
-      updateUser: (userData) => {
-        set((state) => ({
-          user: state.user ? { ...state.user, ...userData } : null,
-        }));
-      },
-
-      setLoading: (isLoading) => {
-        set({ isLoading });
-      },
+      setUser: (user) => set({ user, isAuthenticated: true, isLoading: false }),
+      logout: () => set({ user: null, isAuthenticated: false, isLoading: false }),
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
-      }),
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     }
   )
 );

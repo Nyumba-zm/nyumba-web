@@ -38,7 +38,7 @@ export function LenderComparison({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white p-6">
           <div className="flex items-center justify-between">
@@ -81,17 +81,19 @@ export function LenderComparison({
             {lenders.map((lender) => (
               <div
                 key={lender.id}
-                className="border border-gray-200 rounded-lg overflow-hidden"
+                className="border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden"
               >
                 {/* Lender Header */}
-                <div className="bg-gray-50 p-4 border-b border-gray-200">
+                <div className="bg-stone-50 dark:bg-stone-900 p-4 border-b border-stone-200 dark:border-stone-700">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-lg text-gray-900">
+                    <h3 className="font-bold text-lg text-stone-900 dark:text-stone-50">
                       {lender.name}
                     </h3>
                     {lender.logo && (
-                      <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                        <span className="text-xl">{lender.logo}</span>
+                      <div className="w-12 h-12 bg-white dark:bg-stone-800 rounded-lg flex items-center justify-center border border-stone-200 dark:border-stone-700">
+                        <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                          {lender.name.charAt(0)}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -103,17 +105,17 @@ export function LenderComparison({
                           "text-sm",
                           i < Math.floor(lender.rating)
                             ? "text-yellow-400"
-                            : "text-gray-300"
+                            : "text-stone-300 dark:text-stone-600"
                         )}
                       >
                         ★
                       </span>
                     ))}
-                    <span className="text-sm text-gray-600 ml-1">
+                    <span className="text-sm text-stone-600 dark:text-stone-400 ml-1">
                       {lender.rating.toFixed(1)}
                     </span>
                     {lender.rating === highestRating && (
-                      <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                      <span className="ml-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
                         Highest Rated
                       </span>
                     )}
@@ -124,20 +126,22 @@ export function LenderComparison({
                 <div className="p-4 space-y-4">
                   {/* Interest Rate */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Interest Rate</p>
+                    <p className="text-xs text-stone-500 dark:text-stone-400 mb-1">
+                      Interest Rate
+                    </p>
                     <div className="flex items-baseline gap-2">
                       <p
                         className={cn(
                           "text-2xl font-bold",
                           lender.interestRate === lowestRate
-                            ? "text-green-600"
-                            : "text-gray-900"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-stone-900 dark:text-stone-50"
                         )}
                       >
                         {lender.interestRate}%
                       </p>
                       {lender.interestRate === lowestRate && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                        <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
                           Lowest
                         </span>
                       )}
@@ -146,20 +150,22 @@ export function LenderComparison({
 
                   {/* Processing Fee */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Processing Fee</p>
+                    <p className="text-xs text-stone-500 dark:text-stone-400 mb-1">
+                      Processing Fee
+                    </p>
                     <div className="flex items-baseline gap-2">
                       <p
                         className={cn(
                           "text-lg font-semibold",
                           lender.processingFee === lowestFee
-                            ? "text-green-600"
-                            : "text-gray-900"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-stone-900 dark:text-stone-50"
                         )}
                       >
                         {lender.processingFee}%
                       </p>
                       {lender.processingFee === lowestFee && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                        <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
                           Lowest
                         </span>
                       )}
@@ -168,28 +174,32 @@ export function LenderComparison({
 
                   {/* Loan Tenure */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Loan Tenure</p>
-                    <p className="text-base font-semibold text-gray-900">
+                    <p className="text-xs text-stone-500 dark:text-stone-400 mb-1">
+                      Loan Tenure
+                    </p>
+                    <p className="text-base font-semibold text-stone-900 dark:text-stone-50">
                       {lender.minTenure} - {lender.maxTenure} years
                     </p>
                   </div>
 
                   {/* Max Loan Amount */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Maximum Loan</p>
+                    <p className="text-xs text-stone-500 dark:text-stone-400 mb-1">
+                      Maximum Loan
+                    </p>
                     <div className="flex items-baseline gap-2">
                       <p
                         className={cn(
                           "text-base font-semibold",
                           lender.maxLoanAmount === highestLoan
-                            ? "text-green-600"
-                            : "text-gray-900"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-stone-900 dark:text-stone-50"
                         )}
                       >
                         {formatCurrency(lender.maxLoanAmount)}
                       </p>
                       {lender.maxLoanAmount === highestLoan && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                        <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
                           Highest
                         </span>
                       )}
@@ -198,14 +208,18 @@ export function LenderComparison({
 
                   {/* Features */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-2">Key Features</p>
+                    <p className="text-xs text-stone-500 dark:text-stone-400 mb-2">
+                      Key Features
+                    </p>
                     <ul className="space-y-1.5">
                       {lender.features.slice(0, 4).map((feature, idx) => (
                         <li
                           key={idx}
-                          className="text-xs text-gray-700 flex items-start gap-1.5"
+                          className="text-xs text-stone-700 dark:text-stone-300 flex items-start gap-1.5"
                         >
-                          <span className="text-primary-600 mt-0.5">✓</span>
+                          <span className="text-primary-600 dark:text-primary-400 mt-0.5">
+                            ✓
+                          </span>
                           <span>{feature}</span>
                         </li>
                       ))}
@@ -228,11 +242,11 @@ export function LenderComparison({
           </div>
 
           {/* Monthly Payment Estimate */}
-          <div className="mt-8 bg-primary-50 border border-primary-200 rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">
-              💰 Monthly Payment Estimate
+          <div className="mt-8 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-6">
+            <h3 className="font-semibold text-stone-900 dark:text-stone-50 mb-4">
+              Monthly Payment Estimate
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-stone-600 dark:text-stone-400 mb-4">
               Based on a K1,000,000 loan over 20 years:
             </p>
             <div
@@ -252,8 +266,10 @@ export function LenderComparison({
 
                 return (
                   <div key={lender.id} className="text-center">
-                    <p className="text-xs text-gray-600 mb-1">{lender.name}</p>
-                    <p className="text-xl font-bold text-primary-700">
+                    <p className="text-xs text-stone-600 dark:text-stone-400 mb-1">
+                      {lender.name}
+                    </p>
+                    <p className="text-xl font-bold text-primary-700 dark:text-primary-400">
                       {formatCurrency(monthlyPayment)}/mo
                     </p>
                   </div>
@@ -264,11 +280,11 @@ export function LenderComparison({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-4 bg-gray-50">
+        <div className="border-t border-stone-200 dark:border-stone-700 p-4 bg-stone-50 dark:bg-stone-900">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              💡 Tip: Consider total cost over the loan period, not just the
-              interest rate
+            <p className="text-sm text-stone-600 dark:text-stone-400">
+              Consider total cost over the loan period, not just the interest
+              rate
             </p>
             <Button variant="outline" onClick={onClose}>
               Close Comparison
