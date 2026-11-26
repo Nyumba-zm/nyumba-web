@@ -1,3 +1,12 @@
+> [!IMPORTANT]
+> **Retired (November 2026).** This repository is archived and read-only. Nyumba's web app is
+> [`Nyumba-zm/nyumba-frontend`](https://github.com/Nyumba-zm/nyumba-frontend); the API is
+> [`Nyumba-zm/nyumba-backend`](https://github.com/Nyumba-zm/nyumba-backend) and the phone app is
+> `nyumba-mobile`. The parts of this app worth keeping (location autocomplete, quick filter
+> pills, sorting, saved homes) were ported to nyumba-frontend — see
+> [`docs/PORTING_NOTES.md`](docs/PORTING_NOTES.md). History, including the `jack-frontend`
+> branch, is kept here for reference.
+
 # 🏡 Nyumba - Zambian Real Estate Platform
 
 **Where Nyumbaling Happens** - Your gateway to finding the perfect home in Zambia.

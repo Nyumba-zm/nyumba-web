@@ -3,7 +3,10 @@
 Next.js 16 / React 19 app for **Nyumba**, a **Zambian** real estate platform
 (branch history: `jack-frontend`). It overlaps with `../nyumba-frontend`.
 
-## Status: secondary frontend
+## Status: RETIRED — archived, read-only. Do not change this repo.
+Nyumba's web app is `../nyumba-frontend`. Useful parts were ported there (docs/PORTING_NOTES.md).
+
+## Former status: secondary frontend
 **`../nyumba-frontend` is the single build target for the demo.** This repo is kept
 correct and building, and is a source of UI ideas to port — but new demo features
 (see `demo-scope` skill) are built in nyumba-frontend, not here.
