@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils/cn';
-import { ListingType, PropertyType } from '@/types/property';
+import type { ListingType, PropertyType } from '@/types/property';
 
 interface QuickFilterPillsProps {
   selectedListingType?: ListingType;
@@ -11,20 +11,20 @@ interface QuickFilterPillsProps {
 }
 
 const listingTypes: { value: ListingType; label: string }[] = [
-  { value: 'sale', label: 'Buy' },
   { value: 'rent', label: 'Rent' },
+  { value: 'sale', label: 'Buy' },
 ];
 
 const propertyTypes: { value: PropertyType; label: string }[] = [
   { value: 'house', label: 'House' },
   { value: 'apartment', label: 'Apartment' },
   { value: 'townhouse', label: 'Townhouse' },
+  { value: 'studio', label: 'Studio' },
   { value: 'land', label: 'Land' },
-  { value: 'commercial', label: 'Commercial' },
 ];
 
 export function QuickFilterPills({
-  selectedListingType = 'sale',
+  selectedListingType = 'rent',
   selectedPropertyType,
   onListingTypeChange,
   onPropertyTypeChange,

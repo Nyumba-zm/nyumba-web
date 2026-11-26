@@ -1,17 +1,17 @@
 // src/lib/utils/format.ts
 
 import { format as dateFnsFormat } from 'date-fns';
+import { DEFAULT_CURRENCY, type CurrencyCode } from '@/types/api';
+
+const groupedNumber = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 
 /**
- * Format currency in Zambian Kwacha
+ * Format a price for display: `K 2,500,000` for ZMW, `$ 250,000` for USD.
+ * Formatting is locale-independent so server and client render identical markup.
  */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-ZM', {
-    style: 'currency',
-    currency: 'ZMW',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+export function formatCurrency(amount: number, currency: CurrencyCode = DEFAULT_CURRENCY): string {
+  const symbol = currency === 'ZMW' ? 'K' : '$';
+  return `${symbol} ${groupedNumber.format(amount)}`;
 }
 
 /**
@@ -77,24 +77,27 @@ export function formatRelativeTime(date: string | Date): string {
   return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
 }
 
+const ZAMBIAN_MOBILE = /^(?:\+?260|0)?([79]\d{8})$/;
+
 /**
- * Format phone number
+ * Normalise a Zambian mobile number to E.164 (`+260971234567`).
+ * Accepts `0971234567`, `971234567`, `260971234567`, `+260 97 123 4567`.
+ * Returns null when the input is not a valid Zambian mobile number.
+ */
+export function normalizeZambianPhone(input: string): string | null {
+  const compact = input.replace(/[\s()-]/g, '');
+  const match = ZAMBIAN_MOBILE.exec(compact);
+  return match ? `+260${match[1]}` : null;
+}
+
+/**
+ * Display a phone number as `+260 97 123 4567`; unknown formats are returned unchanged.
  */
 export function formatPhoneNumber(phone: string): string {
-  // Remove all non-digits
-  const cleaned = phone.replace(/\D/g, '');
-
-  // Format as +260 XX XXX XXXX
-  if (cleaned.length === 12 && cleaned.startsWith('260')) {
-    return `+260 ${cleaned.slice(3, 5)} ${cleaned.slice(5, 8)} ${cleaned.slice(8)}`;
-  }
-
-  // Format as 0XX XXX XXXX
-  if (cleaned.length === 10 && cleaned.startsWith('0')) {
-    return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
-  }
-
-  return phone;
+  const e164 = normalizeZambianPhone(phone);
+  if (!e164) return phone;
+  const digits = e164.slice(4);
+  return `+260 ${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5)}`;
 }
 
 /**

@@ -1,75 +1,70 @@
 // src/lib/hooks/useAuth.ts
 
+'use client';
+
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { authService } from '@/lib/api';
+import { AUTH_LOGOUT_EVENT, authService } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { queryKeys } from './queryKeys';
-import type { LoginCredentials, RegisterData, UpdateProfileData } from '@/types/user';
+import type { LoginCredentials, RegisterData } from '@/types/user';
 
-/**
- * Hook to get the current authenticated user
- */
+/** GET /auth/me, kept in sync with the auth store. */
 export function useCurrentUser() {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setUser = useAuthStore((state) => state.setUser);
 
   return useQuery({
     queryKey: queryKeys.auth.user(),
-    queryFn: () => authService.getCurrentUser(),
+    queryFn: async () => {
+      const user = await authService.getCurrentUser();
+      setUser(user);
+      return user;
+    },
     enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
   });
 }
 
 /**
- * Hook for user login
+ * Login. On success the store flips to authenticated and GuestGuard performs the
+ * redirect (honouring ?returnUrl=).
  */
 export function useLogin() {
   const queryClient = useQueryClient();
-  const router = useRouter();
-  const { login: setAuth } = useAuthStore();
+  const setUser = useAuthStore((state) => state.setUser);
 
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authService.login(credentials),
-    onSuccess: (data) => {
-      setAuth(data.user, data.accessToken, data.refreshToken);
-      queryClient.setQueryData(queryKeys.auth.user(), data.user);
-      router.push('/properties');
+    onSuccess: (user) => {
+      queryClient.setQueryData(queryKeys.auth.user(), user);
+      setUser(user);
     },
   });
 }
 
-/**
- * Hook for user registration
- */
+/** Register then log in; redirect handled by GuestGuard as for login. */
 export function useRegister() {
   const queryClient = useQueryClient();
-  const router = useRouter();
-  const { login: setAuth } = useAuthStore();
+  const setUser = useAuthStore((state) => state.setUser);
 
   return useMutation({
     mutationFn: (data: RegisterData) => authService.register(data),
-    onSuccess: (data) => {
-      setAuth(data.user, data.accessToken, data.refreshToken);
-      queryClient.setQueryData(queryKeys.auth.user(), data.user);
-      router.push('/properties');
+    onSuccess: (user) => {
+      queryClient.setQueryData(queryKeys.auth.user(), user);
+      setUser(user);
     },
   });
 }
 
-/**
- * Hook for user logout
- */
 export function useLogout() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { logout } = useAuthStore();
+  const logout = useAuthStore((state) => state.logout);
 
   return useMutation({
-    mutationFn: async () => {
-      authService.logout();
-    },
+    mutationFn: async () => authService.logout(),
     onSuccess: () => {
       logout();
       queryClient.clear();
@@ -79,69 +74,19 @@ export function useLogout() {
 }
 
 /**
- * Hook for forgot password
+ * Clears client auth state when the API client gives up on refreshing the session.
+ * Mount once, near the root.
  */
-export function useForgotPassword() {
-  return useMutation({
-    mutationFn: (email: string) => authService.forgotPassword({ email }),
-  });
-}
-
-/**
- * Hook for reset password
- */
-export function useResetPassword() {
-  const router = useRouter();
-
-  return useMutation({
-    mutationFn: (data: { token: string; password: string; confirmPassword: string }) =>
-      authService.resetPassword(data),
-    onSuccess: () => {
-      router.push('/login');
-    },
-  });
-}
-
-/**
- * Hook for updating user profile
- */
-export function useUpdateProfile() {
+export function useSessionExpiryHandler() {
   const queryClient = useQueryClient();
-  const { updateUser } = useAuthStore();
+  const logout = useAuthStore((state) => state.logout);
 
-  return useMutation({
-    mutationFn: (data: UpdateProfileData) => authService.updateProfile(data),
-    onSuccess: (updatedUser) => {
-      updateUser(updatedUser);
-      queryClient.setQueryData(queryKeys.auth.user(), updatedUser);
-    },
-  });
-}
-
-/**
- * Hook for changing password
- */
-export function useChangePassword() {
-  return useMutation({
-    mutationFn: (data: { currentPassword: string; newPassword: string }) =>
-      authService.changePassword(data.currentPassword, data.newPassword),
-  });
-}
-
-/**
- * Hook for email verification
- */
-export function useVerifyEmail() {
-  return useMutation({
-    mutationFn: (token: string) => authService.verifyEmail(token),
-  });
-}
-
-/**
- * Hook for resending verification email
- */
-export function useResendVerification() {
-  return useMutation({
-    mutationFn: (email: string) => authService.resendVerification(email),
-  });
+  useEffect(() => {
+    const onExpired = () => {
+      logout();
+      queryClient.removeQueries({ queryKey: queryKeys.auth.all });
+    };
+    window.addEventListener(AUTH_LOGOUT_EVENT, onExpired);
+    return () => window.removeEventListener(AUTH_LOGOUT_EVENT, onExpired);
+  }, [logout, queryClient]);
 }

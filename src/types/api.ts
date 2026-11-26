@@ -1,41 +1,32 @@
 // src/types/api.ts
 
 /**
- * Backend API error format
+ * One entry of a request-validation failure, as produced by the backend's
+ * RequestValidationError handler (nyumba-backend/src/nyumba/main.py).
+ * `field` is the Pydantic location joined with " → ", e.g. "body → address → province".
  */
-export interface BackendValidationError {
-  loc: (string | number)[];
-  msg: string;
+export interface BackendFieldError {
+  field: string;
+  message: string;
   type: string;
 }
 
+/**
+ * Error body returned by the backend for every non-2xx response.
+ * - 422 request validation: `{detail: "Validation error", errors: [...]}`
+ * - 422 domain validation:  `{detail, field}`
+ * - 409 business rule:      `{detail, rule}`
+ * - everything else:        `{detail}`
+ */
 export interface BackendApiError {
-  detail: string | BackendValidationError[];
+  detail: string;
+  errors?: BackendFieldError[];
+  field?: string | null;
+  rule?: string;
 }
 
 /**
- * Frontend error format (transformed)
- */
-export interface ApiError {
-  message: string;
-  code: string;
-  statusCode: number;
-  details?: BackendValidationError[];
-  fieldErrors?: Record<string, string>;
-}
-
-/**
- * Backend pagination format (snake_case)
- */
-export interface BackendPaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  page_size: number;
-}
-
-/**
- * Frontend pagination format (camelCase, with computed fields)
+ * Frontend pagination shape (camelCase, with computed fields).
  */
 export interface PaginatedResponse<T> {
   items: T[];
@@ -47,7 +38,7 @@ export interface PaginatedResponse<T> {
 }
 
 /**
- * Pagination query parameters
+ * Pagination query parameters (frontend).
  */
 export interface PaginationParams {
   page?: number;
@@ -55,60 +46,8 @@ export interface PaginationParams {
 }
 
 /**
- * Sort parameters
+ * Currencies the backend accepts (`Currency` enum in shared_kernel).
  */
-export interface SortParams {
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
+export type CurrencyCode = 'ZMW' | 'USD';
 
-/**
- * Generic query parameters
- */
-export interface QueryParams {
-  [key: string]: string | number | boolean | undefined | null | string[];
-}
-
-/**
- * Currency types supported by the platform
- */
-export type CurrencyCode = 'ZMW' | 'USD' | 'EUR' | 'GBP';
-
-/**
- * Default currency for the platform
- */
 export const DEFAULT_CURRENCY: CurrencyCode = 'ZMW';
-
-/**
- * Price object used in API responses
- */
-export interface Price {
-  amount: number;
-  currency: CurrencyCode;
-}
-
-/**
- * Backend price format (snake_case)
- */
-export interface BackendPrice {
-  amount: number;
-  currency: string;
-}
-
-/**
- * Transform backend pagination to frontend format
- */
-export function transformPagination<T, B>(
-  response: BackendPaginatedResponse<B>,
-  transformItem: (item: B) => T
-): PaginatedResponse<T> {
-  const totalPages = Math.ceil(response.total / response.page_size);
-  return {
-    items: response.items.map(transformItem),
-    total: response.total,
-    page: response.page,
-    pageSize: response.page_size,
-    totalPages,
-    hasMore: response.page < totalPages,
-  };
-}

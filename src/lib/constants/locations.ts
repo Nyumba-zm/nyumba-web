@@ -1,13 +1,31 @@
-// Zambian cities and neighborhoods for property search
+// Zambian reference data for property search and listing forms.
+
+/** The 10 provinces of Zambia (matches `ZambianProvince` in the backend shared kernel). */
+export const ZAMBIAN_PROVINCES = [
+  'Central',
+  'Copperbelt',
+  'Eastern',
+  'Luapula',
+  'Lusaka',
+  'Muchinga',
+  'Northern',
+  'North-Western',
+  'Southern',
+  'Western',
+] as const;
+
+export type ZambianProvince = (typeof ZAMBIAN_PROVINCES)[number];
 
 export interface CityData {
   city: string;
+  province: ZambianProvince;
   neighborhoods: string[];
 }
 
 export const ZAMBIAN_CITIES: CityData[] = [
   {
     city: "Lusaka",
+    province: "Lusaka",
     neighborhoods: [
       "Kabulonga",
       "Rhodes Park",
@@ -33,6 +51,7 @@ export const ZAMBIAN_CITIES: CityData[] = [
   },
   {
     city: "Ndola",
+    province: "Copperbelt",
     neighborhoods: [
       "Kansenshi",
       "Northrise",
@@ -46,6 +65,7 @@ export const ZAMBIAN_CITIES: CityData[] = [
   },
   {
     city: "Kitwe",
+    province: "Copperbelt",
     neighborhoods: [
       "Parklands",
       "Riverside",
@@ -59,6 +79,7 @@ export const ZAMBIAN_CITIES: CityData[] = [
   },
   {
     city: "Livingstone",
+    province: "Southern",
     neighborhoods: [
       "Dambwa",
       "Linda",
@@ -70,6 +91,7 @@ export const ZAMBIAN_CITIES: CityData[] = [
   },
   {
     city: "Kabwe",
+    province: "Central",
     neighborhoods: [
       "Highridge",
       "Natuseko",
@@ -80,6 +102,7 @@ export const ZAMBIAN_CITIES: CityData[] = [
   },
   {
     city: "Chingola",
+    province: "Copperbelt",
     neighborhoods: [
       "Nchanga North",
       "Nchanga South",
@@ -136,3 +159,7 @@ export const searchLocations = (
     loc.display.toLowerCase().includes(lowerQuery)
   );
 };
+
+/** Province for a known city (case-insensitive), used to pre-fill listing forms. */
+export const provinceForCity = (city: string): ZambianProvince | undefined =>
+  ZAMBIAN_CITIES.find((c) => c.city.toLowerCase() === city.trim().toLowerCase())?.province;

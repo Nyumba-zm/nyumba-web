@@ -53,9 +53,8 @@ export function LocationAutocomplete({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
-    if (!newValue) {
-      onChange('');
-    }
+    // Free text has no resolved city/area until a suggestion is picked.
+    onChange(newValue);
   };
 
   return (

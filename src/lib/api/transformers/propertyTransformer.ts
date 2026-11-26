@@ -1,152 +1,147 @@
 // src/lib/api/transformers/propertyTransformer.ts
+//
+// The only mapping between backend property JSON and frontend models.
 
-import type { CurrencyCode, BackendPaginatedResponse, PaginatedResponse, DEFAULT_CURRENCY } from '@/types/api';
+import type { PaginatedResponse } from '@/types/api';
 import type {
-  Property,
-  PropertyImage,
+  BackendCreatePropertyRequest,
   BackendProperty,
-  CreatePropertyDto,
-  PropertySearchParams,
+  BackendPropertyDetail,
+  BackendPropertyList,
   BackendPropertySearchParams,
+  BackendUpdatePropertyRequest,
+  CreatePropertyDto,
+  Property,
+  PropertyDetail,
+  PropertySearchParams,
+  UpdatePropertyDto,
 } from '@/types/property';
 
-/**
- * Format address parts into a display string
- */
-function formatAddress(address: {
-  street: string;
-  city: string;
-  county: string;
-  country: string;
-  postal_code?: string;
-}): string {
-  const parts = [address.street, address.city, address.county];
-  if (address.postal_code) {
-    parts.push(address.postal_code);
-  }
-  return parts.join(', ');
+function optional<T>(value: T | null | undefined): T | undefined {
+  return value ?? undefined;
 }
 
-/**
- * Transform backend property image URLs to PropertyImage objects
- */
-function transformImages(images: string[]): PropertyImage[] {
-  return images.map((url, index) => ({
-    id: `img-${index}`,
-    url,
-    isPrimary: index === 0,
-    displayOrder: index,
-  }));
+function blankToUndefined(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
 }
 
-/**
- * Transform backend property to frontend format
- */
 export function transformProperty(backend: BackendProperty): Property {
   return {
     id: backend.id,
     title: backend.title,
     description: backend.description,
     propertyType: backend.property_type,
-    listingType: backend.listing_type || 'sale',
-    // Price
-    price: backend.price.amount,
-    currency: backend.price.currency as CurrencyCode,
+    listingType: backend.listing_type,
+    price: Number(backend.price_amount),
+    currency: backend.price_currency,
     isNegotiable: backend.is_negotiable,
-    // Address (flattened)
-    street: backend.address.street,
-    city: backend.address.city,
-    county: backend.address.county,
-    country: backend.address.country,
-    postalCode: backend.address.postal_code,
-    formattedAddress: formatAddress(backend.address),
-    // Location
-    latitude: backend.location?.latitude,
-    longitude: backend.location?.longitude,
-    // Details
+    street: backend.address_street,
+    area: optional(backend.address_area),
+    city: backend.address_city,
+    province: backend.address_province,
+    country: backend.address_country,
+    latitude: optional(backend.latitude),
+    longitude: optional(backend.longitude),
     bedrooms: backend.bedrooms,
     bathrooms: backend.bathrooms,
-    areaSqm: backend.area_sqm,
-    yearBuilt: backend.year_built,
-    // Media
-    images: transformImages(backend.images),
+    areaSqm: Number(backend.area_sqm),
+    yearBuilt: optional(backend.year_built),
+    images: backend.images.map((url, index) => ({ url, isPrimary: index === 0 })),
     amenities: backend.amenities,
-    features: backend.features,
-    // Status
     status: backend.status,
-    ownerId: backend.owner_id,
-    agentId: backend.agent_id,
     isVerified: backend.is_verified,
-    isFeatured: backend.is_featured || false,
     viewCount: backend.view_count,
-    // Timestamps
-    createdAt: backend.created_at,
-    updatedAt: backend.updated_at || backend.created_at,
+    lastConfirmedAvailableAt: optional(backend.last_confirmed_available_at),
   };
 }
 
-/**
- * Transform frontend create property DTO to backend format
- */
-export function transformCreatePropertyToBackend(dto: CreatePropertyDto): Record<string, unknown> {
+export function transformPropertyDetail(backend: BackendPropertyDetail): PropertyDetail {
   return {
-    title: dto.title,
-    description: dto.description,
-    property_type: dto.propertyType,
-    listing_type: dto.listingType,
-    address_street: dto.street,
-    address_city: dto.city,
-    address_county: dto.county,
-    address_postal_code: dto.postalCode,
-    latitude: dto.latitude,
-    longitude: dto.longitude,
-    price_amount: dto.price,
-    price_currency: dto.currency || 'ZMW',
-    is_negotiable: dto.isNegotiable || false,
-    bedrooms: dto.bedrooms,
-    bathrooms: dto.bathrooms,
-    area_sqm: dto.areaSqm,
-    year_built: dto.yearBuilt,
-    amenities: dto.amenities || [],
-    images: dto.images || [],
+    ...transformProperty(backend),
+    seller: {
+      name: backend.seller_name,
+      phone: optional(backend.seller_phone),
+      email: backend.seller_email,
+      whatsappLink: optional(backend.seller_whatsapp_link),
+    },
   };
 }
 
-/**
- * Transform frontend search params to backend format
- */
-export function transformSearchParamsToBackend(
-  params: PropertySearchParams
-): BackendPropertySearchParams {
-  const result: BackendPropertySearchParams = {};
-
-  if (params.city) result.city = params.city;
-  if (params.county) result.county = params.county;
-  if (params.propertyType?.length) result.property_type = params.propertyType[0];
-  if (params.priceMin) result.min_price = params.priceMin;
-  if (params.priceMax) result.max_price = params.priceMax;
-  if (params.bedroomsMin) result.min_bedrooms = params.bedroomsMin;
-  if (params.bedroomsMax) result.max_bedrooms = params.bedroomsMax;
-  if (params.status) result.status = params.status;
-  if (params.page) result.page = params.page;
-  if (params.pageSize) result.page_size = params.pageSize;
-
-  return result;
-}
-
-/**
- * Transform paginated property response
- */
-export function transformPaginatedProperties(
-  response: BackendPaginatedResponse<BackendProperty>
+export function transformPropertyList(
+  response: BackendPropertyList
 ): PaginatedResponse<Property> {
-  const totalPages = Math.ceil(response.total / response.page_size);
+  const totalPages = Math.max(1, Math.ceil(response.total / response.page_size));
   return {
-    items: response.items.map(transformProperty),
+    items: response.properties.map(transformProperty),
     total: response.total,
     page: response.page,
     pageSize: response.page_size,
     totalPages,
     hasMore: response.page < totalPages,
+  };
+}
+
+export function transformCreatePropertyToBackend(
+  dto: CreatePropertyDto
+): BackendCreatePropertyRequest {
+  return {
+    title: dto.title,
+    description: dto.description,
+    property_type: dto.propertyType,
+    listing_type: dto.listingType,
+    address: {
+      street: dto.street,
+      city: dto.city,
+      province: dto.province,
+      area: blankToUndefined(dto.area),
+      country: 'Zambia',
+    },
+    coordinates:
+      dto.latitude !== undefined && dto.longitude !== undefined
+        ? { latitude: dto.latitude, longitude: dto.longitude }
+        : undefined,
+    price_amount: dto.price,
+    price_currency: dto.currency,
+    is_negotiable: dto.isNegotiable,
+    bedrooms: dto.bedrooms,
+    bathrooms: dto.bathrooms,
+    area_sqm: dto.areaSqm,
+    year_built: dto.yearBuilt,
+    amenities: dto.amenities,
+  };
+}
+
+export function transformUpdatePropertyToBackend(
+  dto: UpdatePropertyDto
+): BackendUpdatePropertyRequest {
+  return {
+    title: dto.title,
+    description: dto.description,
+    price_amount: dto.price,
+    price_currency: dto.currency,
+    is_negotiable: dto.isNegotiable,
+    bedrooms: dto.bedrooms,
+    bathrooms: dto.bathrooms,
+    area_sqm: dto.areaSqm,
+    year_built: dto.yearBuilt,
+    amenities: dto.amenities,
+  };
+}
+
+export function transformSearchParamsToBackend(
+  params: PropertySearchParams
+): BackendPropertySearchParams {
+  return {
+    area: blankToUndefined(params.area),
+    city: blankToUndefined(params.city),
+    province: blankToUndefined(params.province),
+    listing_type: params.listingType,
+    property_type: params.propertyType,
+    min_price: params.priceMin,
+    max_price: params.priceMax,
+    min_bedrooms: params.bedroomsMin,
+    page: params.page,
+    page_size: params.pageSize,
   };
 }

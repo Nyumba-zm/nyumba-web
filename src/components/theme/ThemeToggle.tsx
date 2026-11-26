@@ -1,21 +1,17 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils/cn";
+import { useIsClient } from "@/lib/hooks/useIsClient";
 
 interface ThemeToggleProps {
   className?: string;
 }
 
 export function ThemeToggle({ className }: ThemeToggleProps) {
-  const [mounted, setMounted] = useState(false);
+  // The theme is only known in the browser; render a placeholder until hydrated.
+  const mounted = useIsClient();
   const { theme, setTheme, resolvedTheme } = useTheme();
-
-  // Prevent hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) {
     // Return placeholder to prevent layout shift

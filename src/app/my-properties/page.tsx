@@ -1,47 +1,26 @@
 "use client";
 
 import { AuthGuard } from "@/components/auth";
-import { useMyProperties, useDeleteProperty, useUpdatePropertyStatus } from "@/lib/hooks";
+import { useMyProperties, usePublishProperty } from "@/lib/hooks";
+import { getErrorMessage } from "@/lib/errors/apiError";
 import { PropertyCard } from "@/components/property/PropertyCard";
+import { ErrorState } from "@/components/shared/ErrorState";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import Link from "next/link";
 
 function MyPropertiesContent() {
-  const { data: propertiesData, isLoading, refetch } = useMyProperties();
-  const deleteProperty = useDeleteProperty();
-  const updateStatus = useUpdatePropertyStatus();
+  const { data: propertiesData, isLoading, error, refetch } = useMyProperties();
+  const publishProperty = usePublishProperty();
   const { addToast } = useToast();
 
   const properties = propertiesData?.items ?? [];
 
-  const handleDelete = (propertyId: string) => {
-    if (!confirm("Are you sure you want to delete this property?")) return;
-
-    deleteProperty.mutate(propertyId, {
-      onSuccess: () => {
-        addToast("Property deleted successfully", "success");
-        refetch();
-      },
-      onError: () => {
-        addToast("Failed to delete property", "error");
-      },
+  const handlePublish = (propertyId: string) => {
+    publishProperty.mutate(propertyId, {
+      onSuccess: () => addToast("Listing published", "success"),
+      onError: (publishError) => addToast(getErrorMessage(publishError), "error"),
     });
-  };
-
-  const handleStatusChange = (propertyId: string, status: string) => {
-    updateStatus.mutate(
-      { propertyId, status },
-      {
-        onSuccess: () => {
-          addToast("Property status updated", "success");
-          refetch();
-        },
-        onError: () => {
-          addToast("Failed to update status", "error");
-        },
-      }
-    );
   };
 
   return (
@@ -64,7 +43,13 @@ function MyPropertiesContent() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {isLoading ? (
+        {error ? (
+          <ErrorState
+            title="Couldn't load your listings"
+            message={getErrorMessage(error)}
+            onRetry={() => refetch()}
+          />
+        ) : isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div
@@ -108,8 +93,8 @@ function MyPropertiesContent() {
           <>
             <div className="mb-6">
               <p className="text-gray-600">
-                Showing {properties.length}{" "}
-                {properties.length === 1 ? "property" : "properties"}
+                Showing {properties.length} of {propertiesData?.total ?? 0}{" "}
+                {propertiesData?.total === 1 ? "listing" : "listings"}
               </p>
             </div>
 
@@ -118,33 +103,18 @@ function MyPropertiesContent() {
                 <div key={property.id} className="relative">
                   <PropertyCard property={property} />
 
-                  {/* Action buttons overlay */}
-                  <div className="absolute bottom-4 left-4 right-4 flex gap-2">
-                    <Link href={`/properties/${property.id}/edit`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full bg-white">
-                        Edit
+                  {property.status === "draft" && (
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={() => handlePublish(property.id)}
+                        disabled={publishProperty.isPending}
+                      >
+                        Publish
                       </Button>
-                    </Link>
-                    <select
-                      value={property.status}
-                      onChange={(e) => handleStatusChange(property.id, e.target.value)}
-                      className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white"
-                    >
-                      <option value="active">Active</option>
-                      <option value="pending">Pending</option>
-                      <option value="sold">Sold</option>
-                      <option value="rented">Rented</option>
-                      <option value="withdrawn">Withdrawn</option>
-                    </select>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => handleDelete(property.id)}
-                      disabled={deleteProperty.isPending}
-                    >
-                      Delete
-                    </Button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

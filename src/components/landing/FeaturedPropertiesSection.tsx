@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useFeaturedProperties } from '@/lib/hooks/useProperties';
+import { useProperties } from '@/lib/hooks';
 import { PropertyGrid } from '@/components/property/PropertyGrid';
 import { cn } from '@/lib/utils/cn';
 import type { ListingType } from '@/types/property';
@@ -17,12 +17,11 @@ const tabs: { value: TabType; label: string }[] = [
 
 export function FeaturedPropertiesSection() {
   const [activeTab, setActiveTab] = useState<TabType>('all');
-  const { data: properties, isLoading } = useFeaturedProperties(9);
-
-  const filteredProperties = properties?.filter((property) => {
-    if (activeTab === 'all') return true;
-    return property.listingType === activeTab;
-  }) || [];
+  const { data, isLoading, isError } = useProperties({
+    listingType: activeTab === 'all' ? undefined : activeTab,
+    pageSize: 9,
+  });
+  const properties = data?.items ?? [];
 
   return (
     <section className="py-16 lg:py-24 bg-stone-50 dark:bg-stone-900">
@@ -31,10 +30,10 @@ export function FeaturedPropertiesSection() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
           <div>
             <h2 className="text-3xl lg:text-4xl font-bold text-stone-900 dark:text-stone-50">
-              Featured Properties
+              Latest Listings
             </h2>
             <p className="mt-2 text-stone-600 dark:text-stone-400">
-              Handpicked properties for you to explore
+              Newly listed homes, with the price shown upfront
             </p>
           </div>
 
@@ -72,22 +71,16 @@ export function FeaturedPropertiesSection() {
           ))}
         </div>
 
-        {/* Property Grid */}
-        <PropertyGrid properties={filteredProperties} isLoading={isLoading} />
-
-        {/* Empty State for filtered results */}
-        {!isLoading && filteredProperties.length === 0 && properties && properties.length > 0 && (
-          <div className="text-center py-12">
-            <p className="text-stone-600 dark:text-stone-400">
-              No {activeTab === 'sale' ? 'properties for sale' : 'rental properties'} found.
-            </p>
-            <button
-              onClick={() => setActiveTab('all')}
-              className="mt-4 text-primary-600 dark:text-primary-400 font-medium hover:underline"
-            >
-              View all properties
-            </button>
-          </div>
+        {isError ? (
+          <p className="text-center py-12 text-stone-600 dark:text-stone-400">
+            Listings are unavailable right now. Please try again shortly.
+          </p>
+        ) : !isLoading && properties.length === 0 ? (
+          <p className="text-center py-12 text-stone-600 dark:text-stone-400">
+            No {activeTab === 'sale' ? 'properties for sale' : activeTab === 'rent' ? 'rentals' : 'listings'} yet.
+          </p>
+        ) : (
+          <PropertyGrid properties={properties} isLoading={isLoading} />
         )}
       </div>
     </section>

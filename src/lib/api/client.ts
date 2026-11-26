@@ -1,316 +1,177 @@
 // src/lib/api/client.ts
+//
+// Thin transport over axios: base URL, bearer token, token refresh, error mapping.
+// It deliberately does NOT rename keys. Requests and responses are exactly the
+// backend's snake_case JSON, typed by the Backend* interfaces in src/types, and the
+// transformers in ./transformers are the single place that maps them to frontend models.
 
 import axios, {
   AxiosError,
-  AxiosInstance,
-  AxiosRequestConfig,
-  InternalAxiosRequestConfig,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
 } from 'axios';
 import { ApiError } from '@/lib/errors/apiError';
-import { transformResponse, transformRequest, transformQueryParams } from '@/lib/utils/caseTransform';
 import type { BackendApiError } from '@/types/api';
+import type { BackendTokenResponse } from '@/types/user';
 
-/**
- * API Client configuration
- */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-const API_TIMEOUT = 30000; // 30 seconds
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
+const API_TIMEOUT_MS = 30_000;
 
-/**
- * Token storage keys
- */
+/** Fired on `window` when the session can no longer be refreshed. */
+export const AUTH_LOGOUT_EVENT = 'auth:logout';
+
+// ---------------------------------------------------------------------------
+// Token storage — the single source of truth for tokens.
+// ---------------------------------------------------------------------------
+
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
-/**
- * Get stored tokens
- */
-function getStoredTokens() {
-  if (typeof window === 'undefined') {
-    return { accessToken: null, refreshToken: null };
-  }
-  return {
-    accessToken: localStorage.getItem(ACCESS_TOKEN_KEY),
-    refreshToken: localStorage.getItem(REFRESH_TOKEN_KEY),
-  };
-}
+const isBrowser = () => typeof window !== 'undefined';
 
-/**
- * Store tokens
- */
-function storeTokens(accessToken: string, refreshToken?: string) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  if (refreshToken) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-  }
-}
+export const tokenStorage = {
+  getAccessToken(): string | null {
+    return isBrowser() ? localStorage.getItem(ACCESS_TOKEN_KEY) : null;
+  },
+  getRefreshToken(): string | null {
+    return isBrowser() ? localStorage.getItem(REFRESH_TOKEN_KEY) : null;
+  },
+  /** Stores both tokens; the backend rotates the refresh token on every refresh. */
+  setTokens(tokens: Pick<BackendTokenResponse, 'access_token' | 'refresh_token'>): void {
+    if (!isBrowser()) return;
+    localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
+    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+  },
+  clear(): void {
+    if (!isBrowser()) return;
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  },
+};
 
-/**
- * Clear stored tokens
- */
-function clearTokens() {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-}
+// Requests that must never trigger a refresh-and-retry on 401
+// (a 401 from these means bad credentials / dead refresh token, not an expired access token).
+const NO_REFRESH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh'];
 
-/**
- * API Client class with token refresh and case transformation
- */
+type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
 class ApiClient {
-  private client: AxiosInstance;
-  private isRefreshing: boolean = false;
-  private refreshSubscribers: Array<(token: string) => void> = [];
+  private readonly http: AxiosInstance;
+  /** Shared in-flight refresh so concurrent 401s trigger exactly one refresh call. */
+  private refreshPromise: Promise<string> | null = null;
 
   constructor() {
-    this.client = axios.create({
+    this.http = axios.create({
       baseURL: API_BASE_URL,
-      timeout: API_TIMEOUT,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      timeout: API_TIMEOUT_MS,
+      headers: { 'Content-Type': 'application/json' },
     });
 
-    this.setupInterceptors();
-  }
-
-  /**
-   * Setup request and response interceptors
-   */
-  private setupInterceptors(): void {
-    // Request interceptor
-    this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        // Add auth token if available
-        const { accessToken } = getStoredTokens();
-        if (accessToken && config.headers) {
-          config.headers.Authorization = `Bearer ${accessToken}`;
-        }
-
-        // Transform request body from camelCase to snake_case
-        if (config.data && !(config.data instanceof FormData)) {
-          config.data = transformRequest(config.data);
-        }
-
-        // Transform query params from camelCase to snake_case
-        if (config.params) {
-          config.params = transformQueryParams(config.params);
-        }
-
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
+    this.http.interceptors.request.use((config) => {
+      const accessToken = tokenStorage.getAccessToken();
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
       }
-    );
+      return config;
+    });
 
-    // Response interceptor
-    this.client.interceptors.response.use(
-      (response) => {
-        // Transform response data from snake_case to camelCase
-        if (response.data) {
-          response.data = transformResponse(response.data);
-        }
-        return response.data;
-      },
-      async (error: AxiosError<BackendApiError>) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & {
-          _retry?: boolean;
-        };
-
-        // Handle network errors
-        if (!error.response) {
-          if (error.code === 'ECONNABORTED') {
-            return Promise.reject(ApiError.timeoutError());
-          }
-          return Promise.reject(ApiError.networkError());
-        }
-
-        const { status, data } = error.response;
-
-        // Handle 401 Unauthorized - attempt token refresh
-        if (status === 401 && !originalRequest._retry) {
-          if (this.isRefreshing) {
-            // Queue this request while refresh is in progress
-            return new Promise((resolve) => {
-              this.refreshSubscribers.push((token: string) => {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
-                resolve(this.client(originalRequest));
-              });
-            });
-          }
-
-          originalRequest._retry = true;
-          this.isRefreshing = true;
-
-          try {
-            const { refreshToken } = getStoredTokens();
-            if (!refreshToken) {
-              throw new Error('No refresh token available');
-            }
-
-            // Attempt to refresh the token
-            const response = await axios.post<{ access_token: string }>(
-              `${API_BASE_URL}/auth/refresh`,
-              { refresh_token: refreshToken },
-              { headers: { 'Content-Type': 'application/json' } }
-            );
-
-            const newAccessToken = response.data.access_token;
-            storeTokens(newAccessToken);
-
-            // Retry all queued requests with new token
-            this.refreshSubscribers.forEach((callback) => callback(newAccessToken));
-            this.refreshSubscribers = [];
-
-            // Retry the original request
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-            return this.client(originalRequest);
-          } catch (refreshError) {
-            // Token refresh failed - clear tokens and redirect to login
-            clearTokens();
-            this.refreshSubscribers = [];
-
-            if (typeof window !== 'undefined') {
-              // Dispatch a custom event so the app can handle logout
-              window.dispatchEvent(new CustomEvent('auth:logout'));
-              window.location.href = '/login';
-            }
-
-            return Promise.reject(
-              new ApiError('Session expired. Please log in again.', 401, 'UNAUTHORIZED')
-            );
-          } finally {
-            this.isRefreshing = false;
-          }
-        }
-
-        // Handle other errors
-        if (data) {
-          return Promise.reject(ApiError.fromResponse(data, status));
-        }
-
-        return Promise.reject(
-          new ApiError(
-            getDefaultErrorMessage(status),
-            status
-          )
-        );
-      }
+    this.http.interceptors.response.use(
+      (response) => response,
+      (error: AxiosError<BackendApiError>) => this.handleError(error)
     );
   }
 
-  /**
-   * GET request
-   */
-  async get<T>(url: string, params?: Record<string, unknown>, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.get(url, { ...config, params });
+  private async handleError(error: AxiosError<BackendApiError>): Promise<AxiosResponse> {
+    if (!error.response) {
+      throw error.code === AxiosError.ECONNABORTED
+        ? ApiError.timeoutError()
+        : ApiError.networkError();
+    }
+
+    const { status, data } = error.response;
+    const original = error.config as RetriableConfig | undefined;
+    const path = original?.url ?? '';
+
+    if (
+      status === 401 &&
+      original &&
+      !original._retry &&
+      !NO_REFRESH_PATHS.some((p) => path.endsWith(p)) &&
+      tokenStorage.getRefreshToken()
+    ) {
+      original._retry = true;
+      const accessToken = await this.refreshAccessToken();
+      original.headers.Authorization = `Bearer ${accessToken}`;
+      // The retry goes through the interceptors again, so a failure is already an ApiError.
+      return this.http.request(original);
+    }
+
+    throw ApiError.fromResponse(data, status);
   }
 
-  /**
-   * POST request
-   */
-  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.post(url, data, config);
+  private refreshAccessToken(): Promise<string> {
+    if (!this.refreshPromise) {
+      this.refreshPromise = this.performRefresh().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+    return this.refreshPromise;
   }
 
-  /**
-   * PUT request
-   */
-  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.put(url, data, config);
+  private async performRefresh(): Promise<string> {
+    const refreshToken = tokenStorage.getRefreshToken();
+    try {
+      // Plain axios (not this.http) so a failing refresh can't recurse into handleError.
+      const { data } = await axios.post<BackendTokenResponse>(
+        `${API_BASE_URL}/auth/refresh`,
+        { refresh_token: refreshToken },
+        { timeout: API_TIMEOUT_MS }
+      );
+      tokenStorage.setTokens(data);
+      return data.access_token;
+    } catch {
+      tokenStorage.clear();
+      if (isBrowser()) {
+        window.dispatchEvent(new Event(AUTH_LOGOUT_EVENT));
+      }
+      throw new ApiError('Your session has expired. Please log in again.', 401, 'UNAUTHORIZED');
+    }
   }
 
-  /**
-   * PATCH request
-   */
-  async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.patch(url, data, config);
+  async get<T>(url: string, params?: object, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.http.get<T>(url, { ...config, params });
+    return response.data;
   }
 
-  /**
-   * DELETE request
-   */
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.delete(url, config);
+  async post<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.http.post<T>(url, body, config);
+    return response.data;
   }
 
-  /**
-   * File upload with progress tracking
-   */
-  async uploadFile<T>(
+  async put<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.http.put<T>(url, body, config);
+    return response.data;
+  }
+
+  /** Multipart upload with optional progress callback (0–100). */
+  async upload<T>(
     url: string,
     formData: FormData,
-    onProgress?: (progress: number) => void,
-    config?: AxiosRequestConfig
+    onProgress?: (percent: number) => void
   ): Promise<T> {
-    return this.client.post(url, formData, {
-      ...config,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: (progressEvent) => {
-        if (onProgress && progressEvent.total) {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          onProgress(progress);
+    const response = await this.http.post<T>(url, formData, {
+      // Let the browser set multipart/form-data with the boundary.
+      headers: { 'Content-Type': undefined },
+      onUploadProgress: (event) => {
+        if (onProgress && event.total) {
+          onProgress(Math.round((event.loaded * 100) / event.total));
         }
       },
     });
-  }
-
-  /**
-   * Set access token (for initial login)
-   */
-  setAccessToken(token: string, refreshToken?: string): void {
-    storeTokens(token, refreshToken);
-  }
-
-  /**
-   * Clear access token (for logout)
-   */
-  clearAccessToken(): void {
-    clearTokens();
-  }
-
-  /**
-   * Check if user is authenticated
-   */
-  isAuthenticated(): boolean {
-    const { accessToken } = getStoredTokens();
-    return !!accessToken;
+    return response.data;
   }
 }
 
-/**
- * Get default error message for HTTP status code
- */
-function getDefaultErrorMessage(status: number): string {
-  switch (status) {
-    case 400:
-      return 'Invalid request. Please check your input.';
-    case 401:
-      return 'Authentication required. Please log in.';
-    case 403:
-      return 'You do not have permission to perform this action.';
-    case 404:
-      return 'The requested resource was not found.';
-    case 422:
-      return 'Validation failed. Please check your input.';
-    case 429:
-      return 'Too many requests. Please try again later.';
-    case 500:
-      return 'Server error. Please try again later.';
-    default:
-      if (status >= 500) {
-        return 'Server error. Please try again later.';
-      }
-      return 'An unexpected error occurred.';
-  }
-}
-
-// Export singleton instance
 export const apiClient = new ApiClient();
-
-// Export utility functions
-export { storeTokens, clearTokens, getStoredTokens };

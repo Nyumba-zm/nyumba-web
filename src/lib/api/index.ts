@@ -1,10 +1,5 @@
 // src/lib/api/index.ts
 
-// API Client
-export { apiClient, storeTokens, clearTokens, getStoredTokens } from './client';
-
-// Services
+export { apiClient, tokenStorage, API_BASE_URL, AUTH_LOGOUT_EVENT } from './client';
 export * from './services';
-
-// Transformers
 export * from './transformers';

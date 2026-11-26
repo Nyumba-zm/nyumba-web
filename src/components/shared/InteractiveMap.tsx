@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import type { DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useIsClient } from "@/lib/hooks/useIsClient";
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(
@@ -51,17 +53,17 @@ export function InteractiveMap() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(
     null
   );
-  const [isClient, setIsClient] = useState(false);
-  const [customIcon, setCustomIcon] = useState<any>(null);
+  const isClient = useIsClient();
+  const [customIcon, setCustomIcon] = useState<DivIcon>();
 
   useEffect(() => {
-    setIsClient(true);
-    // Setup custom icons after client-side mount
-    if (typeof window !== "undefined") {
-      const L = require("leaflet");
+    let cancelled = false;
+    // Leaflet touches `window` on import, so load it only in the browser.
+    import("leaflet").then((L) => {
+      if (cancelled) return;
 
-      // Fix for default marker icon
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      // Default marker images don't resolve under bundlers; point them at the CDN.
+      delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl:
           "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -71,16 +73,18 @@ export function InteractiveMap() {
           "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
       });
 
-      // Custom property icon
-      const propertyIcon = L.divIcon({
-        className: "custom-marker",
-        html: `<div style="background-color: #f59e0b; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 30],
-      });
-
-      setCustomIcon(propertyIcon);
-    }
+      setCustomIcon(
+        L.divIcon({
+          className: "custom-marker",
+          html: `<div style="background-color: #f59e0b; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 30],
+        })
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Real coordinates for Lusaka neighborhoods
@@ -408,7 +412,7 @@ export function InteractiveMap() {
                 <Marker
                   key={property.id}
                   position={[property.lat, property.lng]}
-                  icon={customIcon}
+                  {...(customIcon ? { icon: customIcon } : {})}
                   eventHandlers={{
                     click: () => setSelectedProperty(property),
                   }}

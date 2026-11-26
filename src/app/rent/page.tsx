@@ -1,24 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
 import { PropertyGrid } from "@/components/property/PropertyGrid";
-import { mockProperties } from "@/lib/mockData";
+import { ErrorState } from "@/components/shared/ErrorState";
 import { useProperties } from "@/lib/hooks";
+import { getErrorMessage } from "@/lib/errors/apiError";
+import { buildPropertySearchUrl } from "@/lib/search/propertySearchUrl";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
 export default function RentPage() {
-  // Fetch rental properties from API
-  const { data: apiData, isLoading, error } = useProperties({ listingType: "rent" });
-
-  // Use API data with mock fallback
-  const rentProperties = useMemo(() => {
-    if (apiData?.items && apiData.items.length > 0) {
-      return apiData.items;
-    }
-    // Fallback to filtered mock data
-    return mockProperties.filter((property) => property.listingType === "rent");
-  }, [apiData]);
+  const { data, isLoading, error, refetch } = useProperties({ listingType: "rent" });
+  const rentProperties = data?.items ?? [];
+  const total = data?.total ?? 0;
 
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-stone-900">
@@ -34,17 +27,14 @@ export default function RentPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        {/* Error state - show warning but still display fallback data */}
-        {error && !isLoading && (
-          <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              Unable to load latest properties. Showing cached results.
-            </p>
-          </div>
-        )}
-
-        {isLoading ? (
-          <PropertyGrid properties={[]} isLoading={true} />
+        {error ? (
+          <ErrorState
+            title="Couldn't load rentals"
+            message={getErrorMessage(error)}
+            onRetry={() => refetch()}
+          />
+        ) : isLoading ? (
+          <PropertyGrid properties={[]} isLoading />
         ) : rentProperties.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-stone-100 dark:bg-stone-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -77,11 +67,18 @@ export default function RentPage() {
           <>
             <div className="mb-8">
               <p className="text-stone-600 dark:text-stone-400">
-                Showing {rentProperties.length}{" "}
-                {rentProperties.length === 1 ? "property" : "properties"}
+                Showing {rentProperties.length} of {total}{" "}
+                {total === 1 ? "rental" : "rentals"}
               </p>
             </div>
             <PropertyGrid properties={rentProperties} />
+            {total > rentProperties.length && (
+              <div className="mt-10 text-center">
+                <Link href={buildPropertySearchUrl({ listingType: "rent" })}>
+                  <Button variant="outline">See all rentals</Button>
+                </Link>
+              </div>
+            )}
           </>
         )}
       </div>

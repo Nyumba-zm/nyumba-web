@@ -2,7 +2,7 @@
 
 import { AuthGuard } from "@/components/auth";
 import { useAuthStore } from "@/store/authStore";
-import { useMyProperties, useSavedProperties, useConversations } from "@/lib/hooks";
+import { useMyProperties, usePropertiesByIds, useSavedPropertyIds } from "@/lib/hooks";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
@@ -10,15 +10,13 @@ import Link from "next/link";
 function DashboardContent() {
   const { user } = useAuthStore();
   const { data: myPropertiesData, isLoading: loadingMyProperties } = useMyProperties();
-  const { data: savedPropertiesData, isLoading: loadingSaved } = useSavedProperties();
-  const { data: conversationsData, isLoading: loadingConversations } = useConversations();
+  const { savedIds } = useSavedPropertyIds();
+  const { properties: savedProperties } = usePropertiesByIds(
+    savedIds.slice(0, 3)
+  );
 
   const myProperties = myPropertiesData?.items ?? [];
-  const savedProperties = savedPropertiesData?.items ?? [];
-  const conversations = conversationsData ?? [];
-  const unreadCount = conversations.filter((c) => c.unreadCount > 0).length;
-
-  const isSeller = user?.role === "seller" || user?.role === "agent";
+  const isSeller = user?.role === "seller" || user?.role === "agent" || user?.role === "admin";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -36,14 +34,14 @@ function DashboardContent() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Link href="/saved-properties">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Saved Properties</p>
                   <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                    {loadingSaved ? "..." : savedProperties.length}
+                    {savedIds.length}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center">
@@ -65,37 +63,6 @@ function DashboardContent() {
             </div>
           </Link>
 
-          <Link href="/messages">
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Messages</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {loadingConversations ? "..." : conversations.length}
-                  </p>
-                  {unreadCount > 0 && (
-                    <p className="text-sm text-primary-600">{unreadCount} unread</p>
-                  )}
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </Link>
-
           {isSeller && (
             <Link href="/my-properties">
               <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer">
@@ -103,7 +70,7 @@ function DashboardContent() {
                   <div>
                     <p className="text-sm text-gray-500">My Listings</p>
                     <p className="text-3xl font-bold text-gray-900">
-                      {loadingMyProperties ? "..." : myProperties.length}
+                      {loadingMyProperties ? "..." : (myPropertiesData?.total ?? 0)}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -186,7 +153,7 @@ function DashboardContent() {
         )}
 
         {/* Empty State */}
-        {savedProperties.length === 0 && !loadingSaved && (
+        {savedIds.length === 0 && (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg

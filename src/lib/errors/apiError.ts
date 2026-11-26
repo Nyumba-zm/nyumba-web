@@ -1,6 +1,6 @@
 // src/lib/errors/apiError.ts
 
-import type { BackendApiError, BackendValidationError } from '@/types/api';
+import type { BackendApiError, BackendFieldError } from '@/types/api';
 
 /**
  * Error codes for API errors
@@ -12,6 +12,7 @@ export type ApiErrorCode =
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
   | 'NOT_FOUND'
+  | 'CONFLICT'
   | 'RATE_LIMITED'
   | 'SERVER_ERROR'
   | 'UNKNOWN_ERROR';
@@ -22,13 +23,13 @@ export type ApiErrorCode =
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly code: ApiErrorCode;
-  public readonly details?: BackendValidationError[];
+  public readonly details?: BackendFieldError[];
 
   constructor(
     message: string,
     statusCode: number,
     code: ApiErrorCode = 'UNKNOWN_ERROR',
-    details?: BackendValidationError[]
+    details?: BackendFieldError[]
   ) {
     super(message);
     this.name = 'ApiError';
@@ -43,25 +44,21 @@ export class ApiError extends Error {
   }
 
   /**
-   * Create an ApiError from a backend error response
+   * Create an ApiError from a backend error body. The body is `unknown` because
+   * proxies and crashed servers can return HTML or nothing at all.
    */
-  static fromResponse(response: BackendApiError, statusCode: number): ApiError {
+  static fromResponse(body: unknown, statusCode: number): ApiError {
     const code = getErrorCode(statusCode);
-
-    if (typeof response.detail === 'string') {
-      return new ApiError(response.detail, statusCode, code);
+    if (!isBackendApiError(body)) {
+      return new ApiError(getDefaultErrorMessage(statusCode), statusCode, code);
     }
-
-    // Validation errors from backend
-    const messages = response.detail.map(
-      (err) => `${err.loc.slice(1).join('.')}: ${err.msg}`
-    );
-    return new ApiError(
-      messages.join('; '),
-      statusCode,
-      'VALIDATION_ERROR',
-      response.detail
-    );
+    if (body.errors?.length) {
+      const message = body.errors
+        .map((err) => `${fieldName(err.field)}: ${err.message}`)
+        .join('; ');
+      return new ApiError(message, statusCode, 'VALIDATION_ERROR', body.errors);
+    }
+    return new ApiError(body.detail, statusCode, code);
   }
 
   /**
@@ -114,20 +111,14 @@ export class ApiError extends Error {
   }
 
   /**
-   * Get field-specific errors from validation details
+   * Field-level messages keyed by the last path segment (e.g. `province`).
    */
   getFieldErrors(): Record<string, string> {
-    if (!this.details) return {};
-
-    return this.details.reduce(
-      (acc, err) => {
-        // Get the field name (last element of loc, skipping 'body')
-        const field = String(err.loc[err.loc.length - 1]);
-        acc[field] = err.msg;
-        return acc;
-      },
-      {} as Record<string, string>
-    );
+    const result: Record<string, string> = {};
+    for (const err of this.details ?? []) {
+      result[fieldName(err.field)] = err.message;
+    }
+    return result;
   }
 
   /**
@@ -145,6 +136,8 @@ export class ApiError extends Error {
         return 'You do not have permission to perform this action.';
       case 'NOT_FOUND':
         return 'The requested resource was not found.';
+      case 'CONFLICT':
+        return this.message || 'This action conflicts with the current state.';
       case 'RATE_LIMITED':
         return 'Too many requests. Please wait a moment and try again.';
       case 'SERVER_ERROR':
@@ -157,14 +150,27 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Network error (when request fails to reach server)
- */
-export class NetworkError extends ApiError {
-  constructor(message: string = 'Network error. Please check your connection.') {
-    super(message, 0, 'NETWORK_ERROR');
-    this.name = 'NetworkError';
-  }
+/** Last segment of a backend field path, e.g. "body → address → province" → "province". */
+function fieldName(path: string): string {
+  const segments = path.split(' → ');
+  return segments[segments.length - 1];
+}
+
+function isBackendApiError(body: unknown): body is BackendApiError {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    typeof (body as { detail?: unknown }).detail === 'string'
+  );
+}
+
+function getDefaultErrorMessage(status: number): string {
+  if (status === 401) return 'Authentication required. Please log in.';
+  if (status === 403) return 'You do not have permission to perform this action.';
+  if (status === 404) return 'The requested resource was not found.';
+  if (status === 429) return 'Too many requests. Please try again later.';
+  if (status >= 500) return 'Server error. Please try again later.';
+  return 'An unexpected error occurred.';
 }
 
 /**
@@ -181,6 +187,8 @@ function getErrorCode(statusCode: number): ApiErrorCode {
       return 'FORBIDDEN';
     case 404:
       return 'NOT_FOUND';
+    case 409:
+      return 'CONFLICT';
     case 429:
       return 'RATE_LIMITED';
     default:

@@ -2,224 +2,117 @@
 
 'use client';
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  useInfiniteQuery,
-} from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { propertyService } from '@/lib/api';
+import { isApiError } from '@/lib/errors/apiError';
 import { queryKeys } from './queryKeys';
-import type {
-  PropertySearchParams,
-  CreatePropertyDto,
-  UpdatePropertyDto,
-} from '@/types/property';
+import type { PaginationParams } from '@/types/api';
+import type { CreatePropertyDto, PropertySearchParams, UpdatePropertyDto } from '@/types/property';
 
-/**
- * Hook to get paginated properties with filters
- */
-export function useProperties(params?: PropertySearchParams) {
+/** Search active listings (GET /properties). */
+export function useProperties(params: PropertySearchParams = {}) {
   return useQuery({
     queryKey: queryKeys.properties.list(params),
-    queryFn: () => propertyService.getProperties(params),
-    staleTime: 60 * 1000, // 1 minute
+    queryFn: () => propertyService.search(params),
   });
 }
 
-/**
- * Hook for infinite scrolling properties
- */
-export function useInfiniteProperties(params?: Omit<PropertySearchParams, 'page'>) {
-  return useInfiniteQuery({
-    queryKey: queryKeys.properties.list(params),
-    queryFn: ({ pageParam = 1 }) =>
-      propertyService.getProperties({ ...params, page: pageParam }),
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.page + 1 : undefined,
-    initialPageParam: 1,
-  });
-}
-
-/**
- * Hook to get a single property by ID
- */
+/** A single listing with seller contact (GET /properties/{id}). */
 export function useProperty(id: string) {
   return useQuery({
     queryKey: queryKeys.properties.detail(id),
-    queryFn: () => propertyService.getPropertyById(id),
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: () => propertyService.getById(id),
+    enabled: Boolean(id),
+    // A 404 is an answer, not a transient failure.
+    retry: (failureCount, error) =>
+      !(isApiError(error) && error.isNotFoundError()) && failureCount < 2,
   });
 }
 
-/**
- * Hook to get featured properties
- */
-export function useFeaturedProperties(limit: number = 6) {
+/** Several listings by id — used for device-saved listings. Missing ones are dropped. */
+export function usePropertiesByIds(ids: readonly string[]) {
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: queryKeys.properties.detail(id),
+      queryFn: () => propertyService.getById(id),
+      retry: false,
+    })),
+    combine: (results) => ({
+      properties: results.flatMap((result) => (result.data ? [result.data] : [])),
+      isLoading: results.some((result) => result.isLoading),
+    }),
+  });
+}
+
+/** The caller's own listings in every status (GET /properties/mine). */
+export function useMyProperties(params: PaginationParams = {}) {
   return useQuery({
-    queryKey: queryKeys.properties.featured(),
-    queryFn: () => propertyService.getFeaturedProperties(limit),
-    staleTime: 5 * 60 * 1000,
+    queryKey: queryKeys.properties.mine(params),
+    queryFn: () => propertyService.getMine(params),
   });
 }
 
-/**
- * Hook to get similar properties
- */
-export function useSimilarProperties(propertyId: string, limit: number = 4) {
-  return useQuery({
-    queryKey: queryKeys.properties.similar(propertyId),
-    queryFn: () => propertyService.getSimilarProperties(propertyId, limit),
-    enabled: !!propertyId,
-  });
-}
-
-/**
- * Hook to get user's own properties
- */
-export function useMyProperties(params?: PropertySearchParams) {
-  return useQuery({
-    queryKey: queryKeys.properties.my(),
-    queryFn: () => propertyService.getMyProperties(params),
-  });
-}
-
-/**
- * Hook to get saved/favorited properties
- */
-export function useSavedProperties(params?: PropertySearchParams) {
-  return useQuery({
-    queryKey: queryKeys.properties.saved(),
-    queryFn: () => propertyService.getSavedProperties(params),
-  });
-}
-
-/**
- * Hook to create a new property
- */
-export function useCreateProperty() {
+function useInvalidateProperties() {
   const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: queryKeys.properties.all });
+}
 
+export interface CreateListingInput {
+  data: CreatePropertyDto;
+  images: File[];
+}
+
+export interface CreateListingResult {
+  propertyId: string;
+  /** False when no photos were added: the listing stays a draft (publishing needs ≥1 image). */
+  published: boolean;
+}
+
+/**
+ * Full listing flow against the backend: create draft → upload photos → publish.
+ * Without photos the listing is left as a draft the owner can publish later.
+ */
+export function useCreateListing() {
+  const invalidate = useInvalidateProperties();
   return useMutation({
-    mutationFn: (data: CreatePropertyDto) => propertyService.createProperty(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.properties.lists() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.properties.my() });
+    mutationFn: async ({ data, images }: CreateListingInput): Promise<CreateListingResult> => {
+      const property = await propertyService.create(data);
+      if (images.length === 0) {
+        return { propertyId: property.id, published: false };
+      }
+      await propertyService.uploadImages(property.id, images);
+      await propertyService.publish(property.id);
+      return { propertyId: property.id, published: true };
     },
+    onSettled: invalidate,
   });
 }
 
-/**
- * Hook to update a property
- */
+/** PUT /properties/{id}. */
 export function useUpdateProperty() {
-  const queryClient = useQueryClient();
-
+  const invalidate = useInvalidateProperties();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdatePropertyDto }) =>
-      propertyService.updateProperty(id, data),
-    onSuccess: (property) => {
-      queryClient.setQueryData(queryKeys.properties.detail(property.id), property);
-      queryClient.invalidateQueries({ queryKey: queryKeys.properties.lists() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.properties.my() });
-    },
+      propertyService.update(id, data),
+    onSuccess: invalidate,
   });
 }
 
-/**
- * Hook to delete a property
- */
-export function useDeleteProperty() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => propertyService.deleteProperty(id),
-    onSuccess: (_, id) => {
-      queryClient.removeQueries({ queryKey: queryKeys.properties.detail(id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.properties.lists() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.properties.my() });
-    },
-  });
-}
-
-/**
- * Hook to toggle save/unsave a property
- */
-export function useSaveProperty() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (propertyId: string) => propertyService.toggleSaveProperty(propertyId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.properties.saved() });
-    },
-  });
-}
-
-/**
- * Hook to upload property images
- */
+/** POST /properties/{id}/images. */
 export function useUploadPropertyImages() {
-  const queryClient = useQueryClient();
-
+  const invalidate = useInvalidateProperties();
   return useMutation({
-    mutationFn: ({
-      propertyId,
-      files,
-      onProgress,
-    }: {
-      propertyId: string;
-      files: File[];
-      onProgress?: (progress: number) => void;
-    }) => propertyService.uploadImages(propertyId, files, onProgress),
-    onSuccess: (_, { propertyId }) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.properties.detail(propertyId),
-      });
-    },
+    mutationFn: ({ propertyId, files }: { propertyId: string; files: File[] }) =>
+      propertyService.uploadImages(propertyId, files),
+    onSuccess: invalidate,
   });
 }
 
-/**
- * Hook to delete a property image
- */
-export function useDeletePropertyImage() {
-  const queryClient = useQueryClient();
-
+/** POST /properties/{id}/publish. */
+export function usePublishProperty() {
+  const invalidate = useInvalidateProperties();
   return useMutation({
-    mutationFn: ({ propertyId, imageId }: { propertyId: string; imageId: string }) =>
-      propertyService.deleteImage(propertyId, imageId),
-    onSuccess: (_, { propertyId }) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.properties.detail(propertyId),
-      });
-    },
-  });
-}
-
-/**
- * Hook to track property view
- */
-export function useTrackPropertyView() {
-  return useMutation({
-    mutationFn: (propertyId: string) => propertyService.incrementViewCount(propertyId),
-  });
-}
-
-/**
- * Hook to update property status
- */
-export function useUpdatePropertyStatus() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ propertyId, status }: { propertyId: string; status: string }) =>
-      propertyService.updateStatus(propertyId, status),
-    onSuccess: (property) => {
-      queryClient.setQueryData(queryKeys.properties.detail(property.id), property);
-      queryClient.invalidateQueries({ queryKey: queryKeys.properties.lists() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.properties.my() });
-    },
+    mutationFn: (propertyId: string) => propertyService.publish(propertyId),
+    onSuccess: invalidate,
   });
 }

@@ -1,68 +1,99 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { AuthGuard } from "@/components/auth";
-import { useCreateProperty } from "@/lib/hooks";
+import { useCreateListing } from "@/lib/hooks";
+import { getErrorMessage } from "@/lib/errors/apiError";
+import { provinceForCity, ZAMBIAN_PROVINCES } from "@/lib/constants/locations";
+import {
+  createPropertySchema,
+  type CreatePropertyFormInput,
+  type CreatePropertyFormData,
+} from "@/lib/validations";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PropertyType, ListingType, PROPERTY_TYPE_LABELS } from "@/types/property";
+import { PROPERTY_TYPE_LABELS, PROPERTY_TYPES } from "@/types/property";
+import { DEFAULT_CURRENCY } from "@/types/api";
 
-// Form validation schema
-const createPropertySchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  description: z.string().min(20, "Description must be at least 20 characters"),
-  propertyType: z.enum(["apartment", "house", "land", "commercial", "townhouse", "villa", "studio"]),
-  listingType: z.enum(["sale", "rent"]),
-  price: z.number().min(1, "Price is required"),
-  street: z.string().min(3, "Street address is required"),
-  city: z.string().min(2, "City is required"),
-  county: z.string().min(2, "County is required"),
-  bedrooms: z.number().min(0, "Bedrooms must be 0 or more"),
-  bathrooms: z.number().min(0, "Bathrooms must be 0 or more"),
-  areaSqm: z.number().min(1, "Area is required"),
-});
+/** Backend limit for POST /properties/{id}/images. */
+const MAX_PHOTOS = 10;
+const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
 
-type CreatePropertyFormData = z.infer<typeof createPropertySchema>;
+const selectClassName =
+  "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500";
 
 function SellPageContent() {
   const router = useRouter();
   const { addToast } = useToast();
-  const createProperty = useCreateProperty();
+  const createListing = useCreateListing();
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoError, setPhotoError] = useState<string>();
 
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
+    getValues,
     formState: { errors },
-    watch,
-  } = useForm<CreatePropertyFormData>({
+  } = useForm<CreatePropertyFormInput, unknown, CreatePropertyFormData>({
     resolver: zodResolver(createPropertySchema),
     defaultValues: {
       propertyType: "house",
-      listingType: "sale",
-      bedrooms: 3,
-      bathrooms: 2,
+      listingType: "rent",
+      isNegotiable: true,
+      bedrooms: 2,
+      bathrooms: 1,
+      city: "Lusaka",
+      province: "Lusaka",
     },
   });
 
-  const listingType = watch("listingType");
+  const listingType = useWatch({ control, name: "listingType" });
+
+  const handleCityBlur = () => {
+    const province = provinceForCity(getValues("city"));
+    if (province) setValue("province", province, { shouldValidate: true });
+  };
+
+  const handlePhotosChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []);
+    if (selected.length > MAX_PHOTOS) {
+      setPhotoError(`You can upload up to ${MAX_PHOTOS} photos.`);
+      return;
+    }
+    setPhotoError(undefined);
+    setPhotos(selected);
+  };
 
   const onSubmit = (data: CreatePropertyFormData) => {
-    createProperty.mutate(data, {
-      onSuccess: (property) => {
-        addToast("Property listed successfully!", "success");
-        router.push(`/properties/${property.id}`);
+    if (photos.length === 0) {
+      setPhotoError("Add at least one photo. Listings are published with photos.");
+      return;
+    }
+    createListing.mutate(
+      {
+        data: { ...data, currency: DEFAULT_CURRENCY, amenities: [] },
+        images: photos,
       },
-      onError: (error) => {
-        const message =
-          error instanceof Error ? error.message : "Failed to create property";
-        addToast(message, "error");
-      },
-    });
+      {
+        onSuccess: ({ propertyId }) => {
+          addToast("Your listing is live!", "success");
+          router.push(`/properties/${propertyId}`);
+        },
+        onError: (error) => {
+          addToast(
+            `${getErrorMessage(error)} If the listing was created, it is saved as a draft in My Properties.`,
+            "error"
+          );
+        },
+      }
+    );
   };
 
   return (
@@ -210,11 +241,11 @@ function SellPageContent() {
                 <select
                   id="propertyType"
                   {...register("propertyType")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className={selectClassName}
                 >
-                  {Object.entries(PROPERTY_TYPE_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
+                  {PROPERTY_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {PROPERTY_TYPE_LABELS[type]}
                     </option>
                   ))}
                 </select>
@@ -231,10 +262,10 @@ function SellPageContent() {
                 <select
                   id="listingType"
                   {...register("listingType")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className={selectClassName}
                 >
-                  <option value="sale">For Sale</option>
                   <option value="rent">For Rent</option>
+                  <option value="sale">For Sale</option>
                 </select>
               </div>
             </div>
@@ -254,51 +285,61 @@ function SellPageContent() {
                 placeholder={listingType === "rent" ? "e.g., 8500" : "e.g., 2500000"}
                 error={errors.price?.message}
               />
+              <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+                <input type="checkbox" {...register("isNegotiable")} className="h-4 w-4" />
+                Price is negotiable
+              </label>
             </div>
 
             {/* Location */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label
-                  htmlFor="street"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-2">
                   Street Address *
                 </label>
                 <Input
                   id="street"
                   {...register("street")}
-                  placeholder="e.g., 123 Main Road"
+                  placeholder="e.g., 12 Kabulonga Road"
                   error={errors.street?.message}
                 />
               </div>
               <div>
-                <label
-                  htmlFor="city"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  City *
+                <label htmlFor="area" className="block text-sm font-medium text-gray-700 mb-2">
+                  Area / Neighbourhood
+                </label>
+                <Input
+                  id="area"
+                  {...register("area")}
+                  placeholder="e.g., Kabulonga"
+                  error={errors.area?.message}
+                />
+              </div>
+              <div>
+                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                  City / Town *
                 </label>
                 <Input
                   id="city"
-                  {...register("city")}
+                  {...register("city", { onBlur: handleCityBlur })}
                   placeholder="e.g., Lusaka"
                   error={errors.city?.message}
                 />
               </div>
               <div>
-                <label
-                  htmlFor="county"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Neighborhood/Area *
+                <label htmlFor="province" className="block text-sm font-medium text-gray-700 mb-2">
+                  Province *
                 </label>
-                <Input
-                  id="county"
-                  {...register("county")}
-                  placeholder="e.g., Kabulonga"
-                  error={errors.county?.message}
-                />
+                <select id="province" {...register("province")} className={selectClassName}>
+                  {ZAMBIAN_PROVINCES.map((province) => (
+                    <option key={province} value={province}>
+                      {province}
+                    </option>
+                  ))}
+                </select>
+                {errors.province && (
+                  <p className="mt-1 text-sm text-red-600">{errors.province.message}</p>
+                )}
               </div>
             </div>
 
@@ -349,18 +390,40 @@ function SellPageContent() {
               </div>
             </div>
 
+            {/* Photos */}
+            <div>
+              <label htmlFor="photos" className="block text-sm font-medium text-gray-700 mb-2">
+                Photos * <span className="font-normal text-gray-500">(up to {MAX_PHOTOS})</span>
+              </label>
+              <input
+                id="photos"
+                type="file"
+                accept={ACCEPTED_IMAGE_TYPES}
+                multiple
+                onChange={handlePhotosChange}
+                className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-primary-50 file:px-4 file:py-2 file:font-medium file:text-primary-700"
+              />
+              {photos.length > 0 && (
+                <p className="mt-1 text-sm text-gray-600">
+                  {photos.length} photo{photos.length === 1 ? "" : "s"} selected
+                </p>
+              )}
+              {photoError && <p className="mt-1 text-sm text-red-600">{photoError}</p>}
+            </div>
+
             <Button
               type="submit"
               size="lg"
               className="w-full"
-              disabled={createProperty.isPending}
+              disabled={createListing.isPending}
             >
-              {createProperty.isPending ? "Creating Listing..." : "List Property"}
+              {createListing.isPending ? "Publishing listing..." : "Publish Listing"}
             </Button>
           </form>
 
           <p className="text-sm text-gray-600 mt-6 text-center">
-            Your property will be reviewed and published within 24 hours.
+            Your listing goes live as soon as it is published. Nyumba never charges viewing
+            fees, and neither should you.
           </p>
         </div>
 

@@ -1,175 +1,90 @@
 // src/lib/api/services/propertyService.ts
+//
+// One method per backend route in nyumba-backend/src/nyumba/properties/presentation/routes.py.
 
 import { apiClient } from '../client';
 import {
-  transformProperty,
-  transformPaginatedProperties,
   transformCreatePropertyToBackend,
+  transformProperty,
+  transformPropertyDetail,
+  transformPropertyList,
   transformSearchParamsToBackend,
+  transformUpdatePropertyToBackend,
 } from '../transformers';
-import type { BackendPaginatedResponse } from '@/types/api';
+import type { PaginatedResponse, PaginationParams } from '@/types/api';
 import type {
-  Property,
   BackendProperty,
+  BackendPropertyDetail,
+  BackendPropertyList,
+  BackendUploadImagesResponse,
   CreatePropertyDto,
-  UpdatePropertyDto,
+  Property,
+  PropertyDetail,
   PropertySearchParams,
-  PropertyImage,
+  UpdatePropertyDto,
 } from '@/types/property';
-import type { PaginatedResponse } from '@/types/api';
 
-/**
- * Property service
- */
 export const propertyService = {
-  /**
-   * Get paginated list of properties with filters
-   */
-  async getProperties(params?: PropertySearchParams): Promise<PaginatedResponse<Property>> {
-    const backendParams = params ? transformSearchParamsToBackend(params) : undefined;
-    const response = await apiClient.get<BackendPaginatedResponse<BackendProperty>>(
+  /** GET /properties — active listings only, newest first. */
+  async search(params: PropertySearchParams = {}): Promise<PaginatedResponse<Property>> {
+    const response = await apiClient.get<BackendPropertyList>(
       '/properties',
-      backendParams
+      transformSearchParamsToBackend(params)
     );
-    return transformPaginatedProperties(response);
+    return transformPropertyList(response);
   },
 
-  /**
-   * Get a single property by ID
-   */
-  async getPropertyById(id: string): Promise<Property> {
-    const response = await apiClient.get<BackendProperty>(`/properties/${id}`);
-    return transformProperty(response);
+  /** GET /properties/{id} — includes seller contact + WhatsApp link. */
+  async getById(id: string): Promise<PropertyDetail> {
+    const response = await apiClient.get<BackendPropertyDetail>(`/properties/${id}`);
+    return transformPropertyDetail(response);
   },
 
-  /**
-   * Create a new property listing
-   */
-  async createProperty(data: CreatePropertyDto): Promise<Property> {
-    const backendData = transformCreatePropertyToBackend(data);
-    const response = await apiClient.post<BackendProperty>('/properties', backendData);
-    return transformProperty(response);
+  /** GET /properties/mine — the caller's listings in every status (auth). */
+  async getMine({ page, pageSize }: PaginationParams = {}): Promise<PaginatedResponse<Property>> {
+    const response = await apiClient.get<BackendPropertyList>('/properties/mine', {
+      page,
+      page_size: pageSize,
+    });
+    return transformPropertyList(response);
   },
 
-  /**
-   * Update a property listing
-   */
-  async updateProperty(id: string, data: UpdatePropertyDto): Promise<Property> {
-    const backendData = transformCreatePropertyToBackend(data as CreatePropertyDto);
-    const response = await apiClient.patch<BackendProperty>(`/properties/${id}`, backendData);
-    return transformProperty(response);
-  },
-
-  /**
-   * Delete a property listing
-   */
-  async deleteProperty(id: string): Promise<void> {
-    await apiClient.delete(`/properties/${id}`);
-  },
-
-  /**
-   * Get featured properties
-   */
-  async getFeaturedProperties(limit: number = 6): Promise<Property[]> {
-    const response = await apiClient.get<BackendPaginatedResponse<BackendProperty>>(
+  /** POST /properties — creates a draft (auth). */
+  async create(data: CreatePropertyDto): Promise<Property> {
+    const response = await apiClient.post<BackendProperty>(
       '/properties',
-      { is_featured: true, page_size: limit }
+      transformCreatePropertyToBackend(data)
     );
-    return response.items.map(transformProperty);
+    return transformProperty(response);
   },
 
-  /**
-   * Get similar properties
-   */
-  async getSimilarProperties(propertyId: string, limit: number = 4): Promise<Property[]> {
-    const response = await apiClient.get<BackendPaginatedResponse<BackendProperty>>(
-      `/properties/${propertyId}/similar`,
-      { page_size: limit }
+  /** PUT /properties/{id} — partial update of mutable fields (owner only). */
+  async update(id: string, data: UpdatePropertyDto): Promise<Property> {
+    const response = await apiClient.put<BackendProperty>(
+      `/properties/${id}`,
+      transformUpdatePropertyToBackend(data)
     );
-    return response.items.map(transformProperty);
+    return transformProperty(response);
   },
 
-  /**
-   * Get properties by owner
-   */
-  async getMyProperties(params?: PropertySearchParams): Promise<PaginatedResponse<Property>> {
-    const backendParams = params ? transformSearchParamsToBackend(params) : undefined;
-    const response = await apiClient.get<BackendPaginatedResponse<BackendProperty>>(
-      '/properties/my',
-      backendParams
-    );
-    return transformPaginatedProperties(response);
-  },
-
-  /**
-   * Save/unsave a property (favorite)
-   */
-  async toggleSaveProperty(propertyId: string): Promise<{ saved: boolean }> {
-    const response = await apiClient.post<{ saved: boolean }>(
-      `/properties/${propertyId}/save`
-    );
-    return response;
-  },
-
-  /**
-   * Get saved properties
-   */
-  async getSavedProperties(params?: PropertySearchParams): Promise<PaginatedResponse<Property>> {
-    const backendParams = params ? transformSearchParamsToBackend(params) : undefined;
-    const response = await apiClient.get<BackendPaginatedResponse<BackendProperty>>(
-      '/properties/saved',
-      backendParams
-    );
-    return transformPaginatedProperties(response);
-  },
-
-  /**
-   * Upload property images
-   */
+  /** POST /properties/{id}/images — multipart field `files`, max 10 (owner only). */
   async uploadImages(
-    propertyId: string,
+    id: string,
     files: File[],
-    onProgress?: (progress: number) => void
-  ): Promise<PropertyImage[]> {
+    onProgress?: (percent: number) => void
+  ): Promise<string[]> {
     const formData = new FormData();
-    files.forEach((file) => formData.append('images', file));
-
-    const response = await apiClient.uploadFile<{ images: string[] }>(
-      `/properties/${propertyId}/images`,
+    files.forEach((file) => formData.append('files', file));
+    const response = await apiClient.upload<BackendUploadImagesResponse>(
+      `/properties/${id}/images`,
       formData,
       onProgress
     );
-
-    return response.images.map((url, index) => ({
-      id: `img-${index}`,
-      url,
-      isPrimary: index === 0,
-      displayOrder: index,
-    }));
+    return response.image_urls;
   },
 
-  /**
-   * Delete a property image
-   */
-  async deleteImage(propertyId: string, imageId: string): Promise<void> {
-    await apiClient.delete(`/properties/${propertyId}/images/${imageId}`);
-  },
-
-  /**
-   * Increment view count
-   */
-  async incrementViewCount(propertyId: string): Promise<void> {
-    await apiClient.post(`/properties/${propertyId}/view`);
-  },
-
-  /**
-   * Update property status
-   */
-  async updateStatus(propertyId: string, status: string): Promise<Property> {
-    const response = await apiClient.patch<BackendProperty>(
-      `/properties/${propertyId}/status`,
-      { status }
-    );
-    return transformProperty(response);
+  /** POST /properties/{id}/publish — draft → active; requires at least one image (204). */
+  async publish(id: string): Promise<void> {
+    await apiClient.post<void>(`/properties/${id}/publish`);
   },
 };

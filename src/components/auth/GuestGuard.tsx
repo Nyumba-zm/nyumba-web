@@ -16,9 +16,11 @@ function GuestGuardContent({ children, fallbackUrl = '/dashboard' }: GuestGuardP
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      // Check for returnUrl in query params, otherwise use fallback
+      // Only follow same-origin paths so ?returnUrl= can't be used as an open redirect.
       const returnUrl = searchParams.get('returnUrl');
-      router.push(returnUrl ? decodeURIComponent(returnUrl) : fallbackUrl);
+      const isSafePath =
+        returnUrl !== null && returnUrl.startsWith('/') && !returnUrl.startsWith('//');
+      router.push(isSafePath ? returnUrl : fallbackUrl);
     }
   }, [isAuthenticated, isLoading, router, searchParams, fallbackUrl]);
 

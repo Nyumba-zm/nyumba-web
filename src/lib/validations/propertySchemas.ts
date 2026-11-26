@@ -1,151 +1,49 @@
 // src/lib/validations/propertySchemas.ts
+//
+// Limits mirror CreatePropertyRequest in nyumba-backend (properties/presentation/schemas.py).
+// Description is capped at 2000 to satisfy both the current backend (20–5000) and the
+// demo-scope contract (optional, max 2000).
 
 import { z } from 'zod';
+import { ZAMBIAN_PROVINCES } from '@/lib/constants/locations';
+import { LISTING_TYPES, PROPERTY_TYPES } from '@/types/property';
 
-/**
- * Property types
- */
-const propertyTypes = [
-  'apartment',
-  'house',
-  'land',
-  'commercial',
-  'townhouse',
-  'villa',
-  'studio',
-] as const;
+const wholeNumber = (label: string) =>
+  z
+    .number({ message: `${label} must be a number` })
+    .int(`${label} must be a whole number`)
+    .min(0, `${label} cannot be negative`)
+    .max(50, `Maximum 50 ${label.toLowerCase()}`);
 
-/**
- * Address validation schema
- */
-const addressSchema = z.object({
-  street: z.string().min(1, 'Street address is required'),
-  city: z.string().min(1, 'City is required'),
-  county: z.string().min(1, 'Province/County is required'),
-  country: z.string().default('Zambia'),
-  postalCode: z.string().optional(),
-});
-
-/**
- * Create property form validation schema
- */
 export const createPropertySchema = z.object({
   title: z
     .string()
-    .min(10, 'Title must be at least 10 characters')
+    .trim()
+    .min(5, 'Title must be at least 5 characters')
     .max(200, 'Title must be less than 200 characters'),
   description: z
     .string()
-    .min(50, 'Description must be at least 50 characters')
-    .max(5000, 'Description must be less than 5000 characters'),
-  propertyType: z.enum(propertyTypes, {
-    message: 'Please select a property type',
-  }),
-  listingType: z.enum(['sale', 'rent'], {
-    message: 'Please select sale or rent',
-  }),
+    .trim()
+    .min(20, 'Description must be at least 20 characters')
+    .max(2000, 'Description must be less than 2000 characters'),
+  propertyType: z.enum(PROPERTY_TYPES, { message: 'Please select a property type' }),
+  listingType: z.enum(LISTING_TYPES, { message: 'Please select rent or sale' }),
   price: z
-    .number({ message: 'Price must be a number' })
+    .number({ message: 'Price is required' })
     .positive('Price must be greater than 0'),
-  currency: z.enum(['ZMW', 'USD']).default('ZMW'),
-  isNegotiable: z.boolean().default(false),
-  street: z.string().min(1, 'Street address is required'),
-  city: z.string().min(1, 'City is required'),
-  county: z.string().min(1, 'Province is required'),
-  country: z.string().default('Zambia'),
-  postalCode: z.string().optional(),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
-  bedrooms: z
-    .number({ message: 'Bedrooms must be a number' })
-    .int('Bedrooms must be a whole number')
-    .min(0, 'Bedrooms cannot be negative')
-    .max(50, 'Maximum 50 bedrooms'),
-  bathrooms: z
-    .number({ message: 'Bathrooms must be a number' })
-    .int('Bathrooms must be a whole number')
-    .min(0, 'Bathrooms cannot be negative')
-    .max(50, 'Maximum 50 bathrooms'),
+  isNegotiable: z.boolean(),
+  street: z.string().trim().min(1, 'Street address is required').max(255),
+  area: z.string().trim().max(100).optional(),
+  city: z.string().trim().min(1, 'City is required').max(100),
+  province: z.enum(ZAMBIAN_PROVINCES, { message: 'Please select a province' }),
+  bedrooms: wholeNumber('Bedrooms'),
+  bathrooms: wholeNumber('Bathrooms'),
   areaSqm: z
     .number({ message: 'Size must be a number' })
     .positive('Size must be greater than 0'),
-  yearBuilt: z
-    .number()
-    .int()
-    .min(1800, 'Year built must be after 1800')
-    .max(new Date().getFullYear(), 'Year built cannot be in the future')
-    .optional(),
-  amenities: z.array(z.string()).optional().default([]),
-  features: z.array(z.string()).optional().default([]),
 });
 
-export type CreatePropertyFormData = z.infer<typeof createPropertySchema>;
-
-/**
- * Update property form validation schema
- */
-export const updatePropertySchema = createPropertySchema.partial();
-
-export type UpdatePropertyFormData = z.infer<typeof updatePropertySchema>;
-
-/**
- * Property filter form validation schema
- */
-export const propertyFilterSchema = z
-  .object({
-    searchQuery: z.string().optional(),
-    propertyType: z.array(z.enum(propertyTypes)).optional(),
-    listingType: z.enum(['sale', 'rent']).optional(),
-    priceMin: z.number().positive().optional(),
-    priceMax: z.number().positive().optional(),
-    bedroomsMin: z.number().int().min(0).optional(),
-    bedroomsMax: z.number().int().min(0).optional(),
-    bathroomsMin: z.number().int().min(0).optional(),
-    bathroomsMax: z.number().int().min(0).optional(),
-    city: z.string().optional(),
-    county: z.string().optional(),
-    amenities: z.array(z.string()).optional(),
-  })
-  .refine(
-    (data) =>
-      !data.priceMin || !data.priceMax || data.priceMin <= data.priceMax,
-    {
-      message: 'Minimum price cannot be greater than maximum price',
-      path: ['priceMax'],
-    }
-  )
-  .refine(
-    (data) =>
-      !data.bedroomsMin ||
-      !data.bedroomsMax ||
-      data.bedroomsMin <= data.bedroomsMax,
-    {
-      message: 'Minimum bedrooms cannot be greater than maximum',
-      path: ['bedroomsMax'],
-    }
-  );
-
-export type PropertyFilterFormData = z.infer<typeof propertyFilterSchema>;
-
-/**
- * Property image upload validation
- */
-export const propertyImageSchema = z.object({
-  images: z
-    .array(z.instanceof(File))
-    .min(1, 'At least one image is required')
-    .max(20, 'Maximum 20 images allowed')
-    .refine(
-      (files) => files.every((file) => file.size <= 10 * 1024 * 1024),
-      'Each image must be less than 10MB'
-    )
-    .refine(
-      (files) =>
-        files.every((file) =>
-          ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-        ),
-      'Only JPEG, PNG, and WebP images are allowed'
-    ),
-});
-
-export type PropertyImageFormData = z.infer<typeof propertyImageSchema>;
+/** Raw form values (before Zod transforms). */
+export type CreatePropertyFormInput = z.input<typeof createPropertySchema>;
+/** Validated form values. */
+export type CreatePropertyFormData = z.output<typeof createPropertySchema>;
