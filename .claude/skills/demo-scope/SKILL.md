@@ -81,7 +81,8 @@ GET  /api/v1/admin/verification/queue           (admin) → pending IDs + uninsp
 is_verified: bool                       # computed: lister ID verified AND inspected
 verification: {lister_id_verified: bool, property_inspected: bool, inspected_at: str|null}
 ```
-ID images go to S3 (LocalStack) under a private prefix — never returned publicly.
+ID images go to the private `id-documents` blob container (Azure Blob Storage; Azurite locally)
+and are only ever exposed to admins as short-lived read-only SAS links.
 
 ## Feature 4 — "Still available?" check (every 7 days)
 - On publish and on every "yes", set `last_confirmed_available_at = now`.
